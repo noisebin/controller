@@ -18,7 +18,7 @@ ECHO = 24                                  #  Associate pin 14 to Echo
 
 ContSensor = LineSensor(21)# Opto output
 ContSensor.when_line = lambda: print('Waiting for container')
-ContSensor.when_no_line = lambda: print('Container detected')
+ContSensor.when_no_line = lambda: subprocess.Popen(['aplay', '/home/pi/Desktop/samples/loop_safari.wav'])
 
 print("Distance measurement in progress")
 
@@ -28,12 +28,13 @@ GPIO.setup(ECHO, GPIO.IN)                   #  Set pin as GPIO in
 current_distance = -1.0
 previous_distance = -1.0
 INNER_BOUND = 20
-OUTER_BOUND = 400
+OUTER_BOUND = 100
+pulse_start = 0.0
 
 while True:
     GPIO.output(TRIG, False)                 #  Set TRIG as LOW
-    print("Waiting For Sensor To Settle")
-    time.sleep(5)                            #  Delay of 5 seconds
+    #print("Waiting For Sensor To Settle")
+    time.sleep(0.01)                         #  Delay of 0.01 seconds
 
     GPIO.output(TRIG, True)                  #  Set TRIG as HIGH
     time.sleep(0.00001)                      #  Delay of 0.00001 seconds
@@ -54,13 +55,7 @@ while True:
     if((current_distance > INNER_BOUND and current_distance < OUTER_BOUND) and
        (previous_distance <= INNER_BOUND or previous_distance >= OUTER_BOUND)):
         # play a sound in a separate process
-        subprocess.Popen(['aplay', '~/Desktop/sound.wav'])
-    # If the most recent pair of distances show a pattern of moving from inside to outside the 'detection zone'
-    elif((current_distance <= INNER_BOUND or current_distance >= OUTER_BOUND) and
-         (previous_distance > INNER_BOUND and previous_distance < OUTER_BOUND)):
-        # play a sound in a separate process
-        subprocess.Popen(['aplay', '~/Desktop/sound.wav'])
-    else:
-        print("Out Of Range")                   #display out of range
+        process = subprocess.Popen(['aplay', '/home/pi/Desktop/samples/loop_amen.wav'])
+        process.wait()
 
     previous_distance = current_distance
