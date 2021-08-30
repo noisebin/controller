@@ -9,6 +9,7 @@ import time  #  Import time library
 import subprocess # Used for creating a separate process for playing a sound
 from gpiozero import LineSensor
 from signal import pause
+from multi import Player
 GPIO.setwarnings(False)
 GPIO.cleanup()
 GPIO.setmode(GPIO.BCM)                     #  Set GPIO pin numbering
@@ -30,6 +31,8 @@ previous_distance = -1.0
 INNER_BOUND = 20
 OUTER_BOUND = 100
 pulse_start = 0.0
+
+player = Player('./samples/')
 
 while True:
     GPIO.output(TRIG, False)                 #  Set TRIG as LOW
@@ -55,7 +58,13 @@ while True:
     if((current_distance > INNER_BOUND and current_distance < OUTER_BOUND) and
        (previous_distance <= INNER_BOUND or previous_distance >= OUTER_BOUND)):
         # play a sound in a separate process
-        process = subprocess.Popen(['aplay', '/home/pi/Desktop/samples/loop_amen.wav'])
-        process.wait()
+        Player.play()
+    # If the most recent pair of distances show a pattern of moving from inside to outside the 'detection zone'
+    elif((current_distance <= INNER_BOUND or current_distance >= OUTER_BOUND) and
+         (previous_distance > INNER_BOUND and previous_distance < OUTER_BOUND)):
+        # play a sound in a separate process
+        Player.play()
+    else:
+        print("Out Of Range")                   #display out of range
 
     previous_distance = current_distance
