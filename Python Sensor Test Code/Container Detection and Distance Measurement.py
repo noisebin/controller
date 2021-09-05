@@ -29,15 +29,13 @@ GPIO.setup(ECHO, GPIO.IN)                   #  Set pin as GPIO in
 current_distance = -1.0
 previous_distance = -1.0
 INNER_BOUND = 20
-OUTER_BOUND = 100
-pulse_start = 0.0
+OUTER_BOUND = 200
 
-player = Player('./samples/')
-
+player = Player('samples/')
 while True:
     GPIO.output(TRIG, False)                 #  Set TRIG as LOW
-    #print("Waiting For Sensor To Settle")
-    time.sleep(0.01)                         #  Delay of 0.01 seconds
+    print("Waiting For Sensor To Settle")
+    time.sleep(0.1)                            #  Delay of 0.1 seconds
 
     GPIO.output(TRIG, True)                  #  Set TRIG as HIGH
     time.sleep(0.00001)                      #  Delay of 0.00001 seconds
@@ -58,12 +56,18 @@ while True:
     if((current_distance > INNER_BOUND and current_distance < OUTER_BOUND) and
        (previous_distance <= INNER_BOUND or previous_distance >= OUTER_BOUND)):
         # play a sound in a separate process
-        Player.play()
+        player.play()
+        print("Moving into the detection zone")
+        print("previous distance: ", previous_distance)
+        print("current distance: ", current_distance)
     # If the most recent pair of distances show a pattern of moving from inside to outside the 'detection zone'
     elif((current_distance <= INNER_BOUND or current_distance >= OUTER_BOUND) and
          (previous_distance > INNER_BOUND and previous_distance < OUTER_BOUND)):
         # play a sound in a separate process
-        Player.play()
+        #player.play()
+        print("Moving out of the detection zone")
+        print("previous distance: ", previous_distance)
+        print("current distance: ", current_distance)
     else:
         print("Out Of Range")                   #display out of range
 

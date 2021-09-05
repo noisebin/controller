@@ -12,13 +12,19 @@ class Player:
     DATA_TYPE = "float32"
 
     def __init__(self, sounds_base_path):
-        self.sound_base_paths = sounds_base_path
-        self.sound_file_paths =  [
-            path for path in sorted(filter(lambda path: self.good_filepath(path), self.sounds_base_path))
+        self.sounds_base_path = sounds_base_path
+        self.sound_file_paths = [
+            os.path.join(self.sounds_base_path, path) for path in sorted(
+                filter(
+                    lambda path: self.good_filepath(path),
+                    os.listdir(self.sounds_base_path)
+                )
+            )
         ]
         print("Discovered the following .wav files:", self.sound_file_paths)
         self.files = [self.load_sound_file_into_memory(path) for path in self.sound_file_paths]
         self.streams = self.create_streams()
+        self.usb_sound_card_indices = []
 
     def load_sound_file_into_memory(self, path):
         """
@@ -26,8 +32,7 @@ class Player:
         :param path: wav file to be loaded
         :return: audio_data, a 2D numpy array
         """
-
-        audio_data, _ = soundfile.read(path, dtype=DATA_TYPE)
+        audio_data, _ = soundfile.read(path, dtype=self.DATA_TYPE)
         return audio_data
 
 
@@ -66,7 +71,7 @@ class Player:
 
         output = sounddevice.OutputStream(
             device=index,
-            dtype=DATA_TYPE
+            dtype=self.DATA_TYPE
         )
         output.start()
         return output
@@ -84,42 +89,42 @@ class Player:
 
     def create_streams(self):
         print("Files loaded into memory, Looking for USB devices.")
-        usb_sound_card_indices = list(filter(lambda x: x is not False,
-                                            map(self.get_device_number_if_usb_soundcard(),
+        self.usb_sound_card_indices = list(filter(lambda x: x is not False,
+                                            map(self.get_device_number_if_usb_soundcard,
                                                 [index_info for index_info in enumerate(sounddevice.query_devices())])))
-        print("Discovered the following usb sound devices", usb_sound_card_indices)
-        return [self.create_running_output_stream(index) for index in usb_sound_card_indices]
+        print("Discovered the following usb sound devices", self.usb_sound_card_indices)
+        return [self.create_running_output_stream(index) for index in self.usb_sound_card_indices]
 
     def play(self):
         running = True
 
-        if not len(streams) > 0:
+        if not len(self.streams) > 0:
             running = False
             print("No audio devices found, stopping")
 
-        if not len(files) > 0:
+        if not len(self.files) > 0:
             running = False
             print("No sound files found, stopping")
 
         if running:
             print("Playing files")
 
-            threads = [threading.Thread(target=play_wav_on_index, args=[file_path, stream])
-                    for file_path, stream in zip(files, streams)]
+            threads = [threading.Thread(target=self.play_wav_on_index, args=[file_path, stream])
+                    for file_path, stream in zip(self.files, self.streams)]
 
             try:
 
                 for thread in threads:
                     thread.start()
 
-                for thread, device_index in zip(threads, usb_sound_card_indices):
+                for thread, device_index in zip(threads, self.usb_sound_card_indices):
                     print("Waiting for device", device_index, "to finish")
                     thread.join()
 
             except KeyboardInterrupt:
                 running = False
                 print("Stopping stream")
-                for stream in streams:
+                for stream in self.streams:
                     stream.abort(ignore_errors=True)
                     stream.close()
                 print("Streams stopped")
