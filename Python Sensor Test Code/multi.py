@@ -7,7 +7,8 @@ import sounddevice
 import soundfile
 import threading
 import os
- 
+import time
+
 class Player:
     DATA_TYPE = "float32"
 
@@ -23,8 +24,9 @@ class Player:
         ]
         print("Discovered the following .wav files:", self.sound_file_paths)
         self.files = [self.load_sound_file_into_memory(path) for path in self.sound_file_paths]
-        self.streams = self.create_streams()
         self.usb_sound_card_indices = []
+        self.streams = self.create_streams()
+        self.running = False
 
     def load_sound_file_into_memory(self, path):
         """
@@ -59,6 +61,12 @@ class Player:
         """
 
         stream_object.write(audio_data)
+        # print("Stopping stream")
+        # time.sleep(5)
+        # for stream in self.streams:
+        #     stream.abort(ignore_errors=True)
+        #     stream.close()
+        # print("Streams stopped")
 
 
     def create_running_output_stream(self, index):
@@ -96,37 +104,39 @@ class Player:
         return [self.create_running_output_stream(index) for index in self.usb_sound_card_indices]
 
     def play(self):
-        running = True
+        try:
+            if self.running is False:
+                print("running is false")
+                self.running = True
 
-        if not len(self.streams) > 0:
-            running = False
-            print("No audio devices found, stopping")
+                if not len(self.streams) > 0:
+                    self.running = False
+                    print("No audio devices found, stopping")
 
-        if not len(self.files) > 0:
-            running = False
-            print("No sound files found, stopping")
+                if not len(self.files) > 0:
+                    self.running = False
+                    print("No sound files found, stopping")
 
-        if running:
-            print("Playing files")
+                if self.running is True:
+                    print("Playing files")
+                    threads = [threading.Thread(target=self.play_wav_on_index, args=[file_path, stream])
+                            for file_path, stream in zip(self.files, self.streams)]
 
-            threads = [threading.Thread(target=self.play_wav_on_index, args=[file_path, stream])
-                    for file_path, stream in zip(self.files, self.streams)]
+                    for thread in threads:
+                        thread.start()
 
-            try:
+                    for thread, device_index in zip(threads, self.usb_sound_card_indices):
+                        print("Waiting for device", device_index, "to finish")
+                        thread.join()
 
-                for thread in threads:
-                    thread.start()
+                    print("setting running to false")
+                    self.running = False
+        except KeyboardInterrupt:
+            self.running = False
+            print("Stopping stream")
+            for stream in self.streams:
+                stream.abort(ignore_errors=True)
+                stream.close()
+            print("Streams stopped")
 
-                for thread, device_index in zip(threads, self.usb_sound_card_indices):
-                    print("Waiting for device", device_index, "to finish")
-                    thread.join()
-
-            except KeyboardInterrupt:
-                running = False
-                print("Stopping stream")
-                for stream in self.streams:
-                    stream.abort(ignore_errors=True)
-                    stream.close()
-                print("Streams stopped")
-
-        print("Bye.")
+            print("Bye.")
