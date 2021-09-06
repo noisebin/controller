@@ -26,7 +26,8 @@ class Player:
         self.files = [self.load_sound_file_into_memory(path) for path in self.sound_file_paths]
         self.usb_sound_card_indices = []
         self.streams = self.create_streams()
-        self.running = False
+        self.running = [False] * len(self.streams)
+        self.can_run = True
 
     def load_sound_file_into_memory(self, path):
         """
@@ -52,22 +53,16 @@ class Player:
         return False
 
 
-    def play_wav_on_index(self, audio_data, stream_object):
+    def play_wav_on_index(self, audio_data, stream_object, running, index):
         """
         Play an audio file given as the result of `load_sound_file_into_memory`
         :param audio_data: A two-dimensional NumPy array
         :param stream_object: a sounddevice.OutputStream object that will immediately start playing any data written to it.
         :return: None, returns when the data has all been consumed
         """
-
+        running[index] = True
         stream_object.write(audio_data)
-        # print("Stopping stream")
-        # time.sleep(5)
-        # for stream in self.streams:
-        #     stream.abort(ignore_errors=True)
-        #     stream.close()
-        # print("Streams stopped")
-
+        running[index] = False
 
     def create_running_output_stream(self, index):
         """
@@ -105,34 +100,29 @@ class Player:
 
     def play(self):
         try:
-            if self.running is False:
-                print("running is false")
-                self.running = True
-
+            self.can_run = all(val is False for val in self.running)
+            if self.can_run is True:
                 if not len(self.streams) > 0:
-                    self.running = False
+                    self.can_run = False
                     print("No audio devices found, stopping")
 
                 if not len(self.files) > 0:
-                    self.running = False
+                    self.can_run = False
                     print("No sound files found, stopping")
 
-                if self.running is True:
+                if self.can_run is True:
                     print("Playing files")
-                    threads = [threading.Thread(target=self.play_wav_on_index, args=[file_path, stream])
-                            for file_path, stream in zip(self.files, self.streams)]
+                    threads = [threading.Thread(target=self.play_wav_on_index, args=[file_path, stream, self.running, device_index])
+                               for file_path, stream, device_index in zip(self.files, self.streams, self.usb_sound_card_indices)]
 
                     for thread in threads:
                         thread.start()
 
-                    for thread, device_index in zip(threads, self.usb_sound_card_indices):
-                        print("Waiting for device", device_index, "to finish")
-                        thread.join()
-
-                    print("setting running to false")
-                    self.running = False
+                    self.can_run = False
+            else:
+                print("All sound devices busy...")
         except KeyboardInterrupt:
-            self.running = False
+            self.can_run = False
             print("Stopping stream")
             for stream in self.streams:
                 stream.abort(ignore_errors=True)
