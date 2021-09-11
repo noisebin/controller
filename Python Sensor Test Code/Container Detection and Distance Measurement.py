@@ -19,7 +19,7 @@ ECHO = 24                                  #  Associate pin 14 to Echo
 
 ContSensor = LineSensor(21)# Opto output
 ContSensor.when_line = lambda: print('Waiting for container')
-ContSensor.when_no_line = lambda: subprocess.Popen(['aplay', '/home/pi/Desktop/samples/loop_safari.wav'])
+ContSensor.when_no_line = lambda: subprocess.Popen(['aplay', 'samples/loop_safari.wav'])
 
 print("Distance measurement in progress")
 
