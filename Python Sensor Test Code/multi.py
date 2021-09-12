@@ -8,6 +8,7 @@ import soundfile
 import threading
 import os
 import time
+import random
 
 class Player:
     DATA_TYPE = "float32"
@@ -26,6 +27,7 @@ class Player:
         self.files = [self.load_sound_file_into_memory(path) for path in self.sound_file_paths]
         self.usb_sound_card_indices = []
         self.streams = self.create_streams()
+        self.running_indices = [x for x in range(len(self.usb_sound_card_indices))]
         self.running = [False] * len(self.streams)
         self.can_run = True
 
@@ -60,9 +62,13 @@ class Player:
         :param stream_object: a sounddevice.OutputStream object that will immediately start playing any data written to it.
         :return: None, returns when the data has all been consumed
         """
-        running[index] = True
-        stream_object.write(audio_data)
-        running[index] = False
+        try:
+            running[index] = True
+            stream_object.write(audio_data)
+            running[index] = False
+        except ValueError:
+            running[index] = False
+            random.shuffle(self.files)
 
     def create_running_output_stream(self, index):
         """
@@ -111,9 +117,10 @@ class Player:
                     print("No sound files found, stopping")
 
                 if self.can_run is True:
-                    print("Playing files")
-                    threads = [threading.Thread(target=self.play_wav_on_index, args=[file_path, stream, self.running, device_index])
-                               for file_path, stream, device_index in zip(self.files, self.streams, self.usb_sound_card_indices)]
+                    random.shuffle(self.files)
+                    print("Playing file: ?????????????")
+                    threads = [threading.Thread(target=self.play_wav_on_index, args=[file_path, stream, self.running, running_index])
+                               for file_path, stream, running_index in zip(self.files, self.streams, self.running_indices)]
 
                     for thread in threads:
                         thread.start()
