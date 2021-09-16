@@ -32,6 +32,7 @@ ECHO = 24 # ECHO is a variable that here holds 24.
 scaling = 17150 #  Distance / echo time conversion and scaling factor
 
 player = Player('samples/') # Set up the sound player and point it towards the sounds
+
 ContSensor = LineSensor(21) #  Make the Light sensor look for a signal on pin 21
 # Tell the light sensor code to print a message when the line of light is un-broken
 ContSensor.when_line = lambda: print('Waiting for container')
@@ -114,8 +115,6 @@ while True:
 
     # Prepare for writing some new messages to the screen
     sys.stdout.write("\u001b[13;1H")             #  start at a consistent position in window
-    # sys.stdout.write("\u001b[0J")                #  clear from cursor to bottom of screen
-
 
     # If the most recent pair of distances show a pattern of moving from outside to inside the 'detection zone'
     if((current_distance > INNER_BOUND and current_distance < OUTER_BOUND) and
@@ -125,8 +124,8 @@ while True:
 
         # Call our message displaying functions to write messages to the screen about what has just happened
         display_detection("Moving into the detection zone")
+        # f is for formatting a message comprised of multiple parts 
         measured = f'Previous distance: {previous_distance}  Current distance: {current_distance}'
-        # measured = "Previous distance: " + previous_distance + " Current distance: " + current_distance
         display_measured(measured)
 
     # If the most recent pair of distances show a pattern of moving from inside to outside the 'detection zone'
@@ -148,3 +147,5 @@ while True:
     # Keep a historical record (previous_distance) of the latest distance (current_distance) of something detected
     # so that we can compare against it next time something is detected
     previous_distance = current_distance
+
+    # ------------------- end of code --------------------
