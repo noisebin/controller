@@ -55,12 +55,12 @@ class Player:
         # (This code basically says, for each item in the sound_file_paths list, name it 'path',
         # and give this path to the load_sound_file_into_memory function. After each path is passed along this way,
         # Store all of the results in a variable which is a list called files).
-        self.files = [self.load_sound_file_into_memory(path) for path in self.sound_file_paths]
+        self.files = [[path, self.load_sound_file_into_memory(path)] for path in self.sound_file_paths]
         # Set up a variable (which starts as an empty list) to identify the sound cards attached to the computer
         # by number (eg a list such as [1, 2] where 1 and 2 are the first and second sound cards detected)
-        self.usb_sound_card_indices = []
+        self.get_usb_sound_card_indices()
         # Set up a variable to hold some 'streams' of sound data that are sent to the sound cards to play
-        self.streams = self.create_streams()
+        self.streams = [None] * len(self.usb_sound_card_indices)
         # running_indices is a temporary bit of code to identify which sound streams are busy sending sound data
         # to the sound cards, or otherwise waiting for more sound data
         self.running_indices = [x for x in range(len(self.usb_sound_card_indices))]
@@ -76,8 +76,7 @@ class Player:
     # The load_sound_file_into_memory function finds a sound file on the hard drive at the place that 'path' points to
     # and loads the contents of the sound file into memory
     def load_sound_file_into_memory(self, path):
-        audio_data, _ = soundfile.read(path, dtype=self.DATA_TYPE)
-        return audio_data
+        return soundfile.read(path, dtype=self.DATA_TYPE)
 
     # The get_device_number_if_usb_soundcard function will return the number that represents a soundcard
     # if it is a usb soundcard.
@@ -97,27 +96,33 @@ class Player:
     # stream_object: the stream to make the sound flow through, into the sound card
     # running: the list that tracks whether each stream is currently busy (running) or not
     # index: the number that points towards which stream in the 'running' list we're going to use.
-    def play_wav_on_index(self, audio_data, stream_object, running, index):
+    def play_wav_on_index(self, file, device_index, running_index):
         try:
+            file_path, [audio_data, sample_rate] = file
+            print("playing ", file_path)
+            stream_object = self.create_running_output_stream(device_index, sample_rate)
+            self.streams[running_index] = stream_object
             # While the sound is playing on the stream, we want to tell the rest of the code
             # that the stream is busy (running) by setting one of the slots in the 'running' list to True.
-            running[index] = True
+            self.running[running_index] = True
             # Send the sound data into the stream
             stream_object.write(audio_data)
             # As soon as the sound has finished playing on the stream, we set the same slot in the 'running' list to False
             # So that the rest of the code knows that that stream is not busy (running) any more.
-            running[index] = False
+            stream_object.close()
+            self.running[running_index] = False
         except ValueError:
             # Sometimes, the code is unable to play a sound because it can't understand the sound's format.
             # In this case, it causes an error.
             # the 'except' above stops this error from crashing the program, and here we shuffle the list of sounds
             # so that next time a sound is picked to play, it is (hopefully) not the same broken one.
-            running[index] = False
+            self.running[running_index] = False
+            stream_object.close()
             random.shuffle(self.files)
 
     # The create_running_output_stream function creates a 'stream' for the sound data to flow through, into the sound card.
     # Here, index is the number pointing to the sound card that we want the stream to play into
-    def create_running_output_stream(self, index):
+    def create_running_output_stream(self, index, sample_rate):
         output = sounddevice.OutputStream(
             device=index,
             dtype=self.DATA_TYPE
@@ -125,6 +130,11 @@ class Player:
         output.start()
         return output
 
+    def get_usb_sound_card_indices(self):
+        self.usb_sound_card_indices = list(filter(lambda x: x is not False,
+                                            map(self.get_device_number_if_usb_soundcard,
+                                                [index_info for index_info in enumerate(sounddevice.query_devices())])))
+        print("Discovered the following usb sound devices", self.usb_sound_card_indices)
 
     # The good_filepath function is passed the path to a sound file, and returns True or False depending on whether
     # the sound file is playable by our system
@@ -142,10 +152,6 @@ class Player:
         # the numbers representing every sound device detected by the sounddevice package,
         # *where these devices are found to be usb sound cards*.
         # Then store this list in a variable in our player called 'usb_sound_card_indices'.
-        self.usb_sound_card_indices = list(filter(lambda x: x is not False,
-                                            map(self.get_device_number_if_usb_soundcard,
-                                                [index_info for index_info in enumerate(sounddevice.query_devices())])))
-        print("Discovered the following usb sound devices", self.usb_sound_card_indices)
 
         # Lastly, for each number of these usb sound card numbers, create a stream identified by the sound card's number,
         # and return the whole list of streams.
@@ -163,9 +169,11 @@ class Player:
             # If we're able to play new sounds, then try to do so.
             if self.can_run is True:
                 # if no streams were able to be created, we can't play.
-                if not len(self.streams) > 0:
-                    self.can_run = False
-                    print("No audio devices found, stopping")
+                #partial_streams = any(val is None for val in self.streams)
+                #print(self.streams)
+                #if partial_streams:
+                #    self.can_run = False
+                #    print("Some audio devices not detected or configured properly, stopping")
 
                 # if no sound files were found, we can't play.
                 if not len(self.files) > 0:
@@ -187,8 +195,8 @@ class Player:
                     # and what pieces of data we need to give to the function (args).
                     # This means that each thread will run the play_wav_on_index function, but give it different args,
                     # including different sound file paths.
-                    threads = [threading.Thread(target=self.play_wav_on_index, args=[file_path, stream, self.running, running_index])
-                               for file_path, stream, running_index in zip(self.files, self.streams, self.running_indices)]
+                    threads = [threading.Thread(target=self.play_wav_on_index, args=[file, device_index, running_index])
+                               for file, device_index, running_index in zip(self.files, self.usb_sound_card_indices, self.running_indices)]
 
                     # Actually tell all the threads to start working
                     for thread in threads:
