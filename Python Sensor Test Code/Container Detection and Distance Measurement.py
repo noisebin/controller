@@ -10,10 +10,27 @@
 import sys # sys gives us access to helpful Operating System commands
 import RPi.GPIO as GPIO # GPIO lets us talk to the Pi's pins
 import time  # time lets us make the code 'sleep' for an amount of time
+import logging
 
 from gpiozero import LineSensor # The LineSensor package lets us use the light detecting sensor
 from signal import pause # Pause lets us make the code wait at a certain point
 from multi import Player # Player is the package that has the code to play sounds
+
+
+# create logger named 'nb'
+logger = logging.getLogger('nb')
+logger.setLevel(logging.DEBUG)
+
+# create file handler which logs even debug messages
+fh = logging.FileHandler('nb.log')
+fh.setLevel(logging.DEBUG)
+
+# create formatter and add it to the handlers
+formatter = logging.Formatter('%(asctime)s %(name)s.%(levelname)s %(message)s')
+fh.setFormatter(formatter)
+
+# add the handlers to the logger
+logger.addHandler(fh)
 
 # Prepare the Pi's pins for use
 GPIO.setwarnings(False) # Ignore warnings
@@ -35,11 +52,18 @@ player = Player('samples/') # Set up the sound player and point it towards the s
 
 ContSensor = LineSensor(21) #  Make the Light sensor look for a signal on pin 21
 # Tell the light sensor code to print a message when the line of light is un-broken
-ContSensor.when_line = lambda: print('Waiting for container')
+ContSensor.when_line = lambda: handle_line()
 # Tell the light sensor to play a sound when the line of light is broken
-ContSensor.when_no_line = lambda: player.play()
+ContSensor.when_no_line = lambda: handle_no_line(player)
 
-# display_begin sets up the computer screen to display messages in various styles
+def handle_line():
+    logger.info('Waiting for container')
+
+def handle_no_line(player):
+    logger.info('Container detected. Getting ready to play a sound.')
+    player.play()
+
+    # display_begin sets up the computer screen to display messages in various styles
 # (coloured and positioned according to special codes called ANSI escape codes)
 # For more details see eg. https://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html
 def display_begin():
@@ -94,8 +118,9 @@ display_begin()
 # Since the True in while True is always true, the code under the while will loop forever.
 while True:
     GPIO.output(TRIG, False)                     #  Set the signal on the TRIG pin to LOW (eg. off)
-    # print("Waiting For Sensor To Settle")
+    logger.info("Waiting For Sensor To Settle")
     time.sleep(0.1)                              #  Delay of 0.1 seconds
+    logger.info("Finished waiting For Sensor To Settle")
 
     # Send a trigger pulse
     GPIO.output(TRIG, True)                      #  Set the signal on the TRIG pin to HIGH (eg. on)
@@ -120,6 +145,7 @@ while True:
     if((current_distance > INNER_BOUND and current_distance < OUTER_BOUND) and
        (previous_distance <= INNER_BOUND or previous_distance >= OUTER_BOUND)):
         # Play a sound in a separate thread, so that it doesn't interrupt the rest of our code
+        logger.info("Object entered detection zone. About to play a sound.")
         player.play()
 
         # Call our message displaying functions to write messages to the screen about what has just happened

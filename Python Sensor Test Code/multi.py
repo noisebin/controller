@@ -11,6 +11,11 @@ import threading # threading lets us tell the program to run more than one piece
 import os # os gives us access to helpful Operating System commands
 import time # time lets us do things with amounts of time
 import random # random lets us do things like pick random numbers or make things happen randomly
+import logging
+
+# create logger
+logger = logging.getLogger('nb.module')
+
 
 # A class is another kind of self-contained package of code.
 # It's like a template, and you can make a 'real object' (or even many of them) out of the same template.
@@ -33,6 +38,7 @@ class Player:
     # We're calling this piece of text 'sounds_base_path' because it represents the base location
     # for the sounds we want the player to use).
     def __init__(self, sounds_base_path):
+        logger.info('Setting up Player')
         # self is the object that we're creating - the player made from the Player class.
         # here, we make some variables to store bits of data that the player can use later -
         # (we're taking the base sounds location that we give the Player class when we create an object from it, and
@@ -40,6 +46,7 @@ class Player:
         self.sounds_base_path = sounds_base_path
         # We also make a variable attached to this player we're creating that stores in a list all the paths
         # to each individual sound file that it finds at the base sounds location
+        logger.info('Discovering sound files')
         self.sound_file_paths = [
             os.path.join(self.sounds_base_path, path) for path in sorted(
                 filter(
@@ -49,13 +56,15 @@ class Player:
             )
         ]
         # Display a message printing out all the names and locations of the sound files we found
-        print("Discovered the following .wav files:", self.sound_file_paths)
+        logger.info(f'Discovered the following .wav files: {self.sound_file_paths}')
 
         # Read the contents of the sound files on the hard drive and load them into memory
         # (This code basically says, for each item in the sound_file_paths list, name it 'path',
         # and give this path to the load_sound_file_into_memory function. After each path is passed along this way,
         # Store all of the results in a variable which is a list called files).
+        logger.info("Loading sound files into memory")
         self.files = [[path, self.load_sound_file_into_memory(path)] for path in self.sound_file_paths]
+        logger.info("Finished loading sound files into memory")
         # Set up a variable (which starts as an empty list) to identify the sound cards attached to the computer
         # by number (eg a list such as [1, 2] where 1 and 2 are the first and second sound cards detected)
         self.get_usb_sound_card_indices()
@@ -99,7 +108,7 @@ class Player:
     def play_wav_on_index(self, file, device_index, running_index):
         try:
             file_path, [audio_data, sample_rate] = file
-            print("Playing", file_path)
+            logger.info(f'Playing {file_path}')
             sounddevice.play(audio_data, sample_rate, device=device_index)
             # Store a reference to the stream that the sound is playing through in a list
             self.streams[running_index] = sounddevice.get_stream
@@ -107,7 +116,9 @@ class Player:
             # that the stream is busy (running) by setting one of the slots in the 'running' list to True.
             self.running[running_index] = True
             # Wait for the sound to finish playing
+            logger.info(f'Waiting for {file_path} to finish playing on device {device_index}')
             sounddevice.wait()
+            logger.info(f'Finished waiting for {file_path} to finish playing on device {device_index}')
             # As soon as the sound has finished playing on the stream, we set the same slot in the 'running' list to False
             # So that the rest of the code knows that that stream is not busy (running) any more.
             self.running[running_index] = False
@@ -116,14 +127,15 @@ class Player:
             # In this case, it causes an error.
             # the 'except' above stops this error from crashing the program, and here we shuffle the list of sounds
             # so that next time a sound is picked to play, it is (hopefully) not the same broken one.
+            logger.info(f'Error playing {file_path} on device {device_index}. Setting running to False for this device.')
             self.running[running_index] = False
-            random.shuffle(self.files)
 
     def get_usb_sound_card_indices(self):
         self.usb_sound_card_indices = list(filter(lambda x: x is not False,
                                             map(self.get_device_number_if_usb_soundcard,
                                                 [index_info for index_info in enumerate(sounddevice.query_devices())])))
         print("Discovered the following usb sound devices", self.usb_sound_card_indices)
+        logger.info(f'Discovered the following usb sound devices: {self.usb_sound_card_indices}')
 
     # The good_filepath function is passed the path to a sound file, and returns True or False depending on whether
     # the sound file is playable by our system
@@ -158,7 +170,9 @@ class Player:
                 # if we *can* play,
                 if self.can_run is True:
                     # pick a random sound file from the selection
+                    logger.info("All devices are free. Shuffling files to begin playing.")
                     random.shuffle(self.files)
+                    logger.info("Finished shuffling files to begin playing.")
 
                     # Create a 'thread' for each sound that is going to play.
                     # Threads are things that let us run more than one bit of code at the same time.
@@ -182,15 +196,15 @@ class Player:
                     self.can_run = False
             else:
                 # We tried to play new sounds while the current ones were still playing, so print a message
-                print("All sound devices busy...")
+                logger.info("All sound devices busy")
         # If we stop the player playing by hitting the right keys on the keyboard to close the program,
         except KeyboardInterrupt:
             self.can_run = False
-            print("Stopping stream")
+            logger.info("Stopping stream")
             # Tidy up by Stopping and closing all the audio streams into the sound cards
             for stream in self.streams:
                 stream.abort(ignore_errors=True)
                 stream.close()
-            print("Streams stopped")
+            logger.info("Streams stopped")
 
-            print("Bye.")
+            logger.info("Bye.")
