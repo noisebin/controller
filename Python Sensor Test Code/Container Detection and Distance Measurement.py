@@ -6,31 +6,19 @@
 #  encoding:utf-8
 
 # The import command makes separate packages of code available to use in your program
-# Here we are importing some packages that give us the ability to do extra things
+#
 import sys # sys gives us access to helpful Operating System commands
-import RPi.GPIO as GPIO # GPIO lets us talk to the Pi's pins
+import RPi.GPIO as GPIO # GPIO lets us observe or set the Pi's input and output pin electrical voltages
 import time  # time lets us make the code 'sleep' for an amount of time
-import logging
 
-from gpiozero import LineSensor # The LineSensor package lets us use the light detecting sensor
-from signal import pause # Pause lets us make the code wait at a certain point
+# The gpiozero module represents _devices_ by adding useful features on top of the RPi.GPIO module's capabilities.
+from gpiozero import LineSensor 
+# The LineSensor functions are used here to observe the laser container detection sensor
+
+from signal import pause
+# Pause function causes the Pi to sleep, only continuing when woken by pre-defined events.  Not used?
+
 from multi import Player # Player is the package that has the code to play sounds
-
-
-# create logger named 'nb'
-logger = logging.getLogger('nb')
-logger.setLevel(logging.DEBUG)
-
-# create file handler which logs even debug messages
-fh = logging.FileHandler('nb.log')
-fh.setLevel(logging.DEBUG)
-
-# create formatter and add it to the handlers
-formatter = logging.Formatter('%(asctime)s %(name)s.%(levelname)s %(message)s')
-fh.setFormatter(formatter)
-
-# add the handlers to the logger
-logger.addHandler(fh)
 
 # Prepare the Pi's pins for use
 GPIO.setwarnings(False) # Ignore warnings
@@ -52,41 +40,38 @@ player = Player('samples/') # Set up the sound player and point it towards the s
 
 ContSensor = LineSensor(21) #  Make the Light sensor look for a signal on pin 21
 # Tell the light sensor code to print a message when the line of light is un-broken
-ContSensor.when_line = lambda: handle_line()
+ContSensor.when_line = lambda: print('Waiting for container')
 # Tell the light sensor to play a sound when the line of light is broken
-ContSensor.when_no_line = lambda: handle_no_line(player)
+ContSensor.when_no_line = lambda: player.play()
 
-def handle_line():
-    logger.info('Waiting for container')
+# Our program displays information in pre-defined-and-positioned blocks on the screen,
+# to make measurements and events easier to see.
+# The display_begin() function clears the computer screen and prints a title
+# The obscure text codes are called ANSI escape codes, which determine the colour and position of the text which follows.
+# e.g. https://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html
 
-def handle_no_line(player):
-    logger.info('Container detected. Getting ready to play a sound.')
-    player.play()
-
-    # display_begin sets up the computer screen to display messages in various styles
-# (coloured and positioned according to special codes called ANSI escape codes)
-# For more details see eg. https://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html
 def display_begin():
     sys.stdout.write("\u001b[1;1H")                  #  start at a consistent position in window
     sys.stdout.write("\u001b[0J")                    #  clear from cursor to bottom of screen
     sys.stdout.write("\u001b[38;5;121m")             #  ESC[38;5;⟨n⟩m Select foreground color
     sys.stdout.write("\u001b[45m")                   #  ESC[45m Select background color
 
-    print("====== NoiseBin Mark 1 Human Detector =======")
+    print("====== NoiseBin Mark 1 (Humanoid Detector) =======")
     sys.stdout.write("\u001b[0m")                    # ESC[39;m reset to default fore/background colors
 
     print()
     print("Distance measurement in progress")
 
-# display_detection displays messages about whether the ultrasound sensor detects anything,
-# (again using ANSI escape codes to style the messages)
+# display_detection() displays information from the ultrasonic sensor
+#
 def display_detection(status):
     sys.stdout.write("\u001b[13;1H")
     sys.stdout.write("\u001b[0K")                #  Clear to end of line
     print("Status: ", status)
 
-# display_measured displays messages about the distances that something was detected at,
-# (again using ANSI escape codes to style the messages)
+# display_measured() displays messages about the distance to an object / person from the NoiseBin
+# It uses the ultrasonic sensor and has a range of about 10 metres and precision of ~ 2cm
+#
 def display_measured(measured):
     sys.stdout.write("\u001b[15;1H")
     sys.stdout.write("\u001b[0K")                #  Clear to end of line
@@ -94,12 +79,14 @@ def display_measured(measured):
     # sys.stdout.write("Status: ")                 #  -
 
 
-GPIO.setup(TRIG, GPIO.OUT)                       #  Set trigger pin as GPIO out
-GPIO.setup(ECHO, GPIO.IN)                        #  Set response pin as GPIO in
+GPIO.setup(TRIG, GPIO.OUT)                       #  Define ultrasonic sensor trigger pin as GPIO out
+GPIO.setup(ECHO, GPIO.IN)                        #  Define ultrasonic sensor response pin as GPIO in
 
-# Set some variables to hold the values of the distances that something was detected at,
-# last time the sensor saw something (last_distance) and when the sensor saw something *this time* (current_distance)
-# We store -1 in them to start with so that the values are outside the detection zone in the very beginning
+# Declare some variables for the distance measured to an object
+# last distance measurement by the sensor (last_distance) and 
+# the distance measured by the sensor *this time* (current_distance)
+# We set the values of these to be outside our detection zone before beginning,
+# so it will be obvious when an object / person approaches
 current_distance = -1.0
 previous_distance = -1.0
 
@@ -108,19 +95,17 @@ previous_distance = -1.0
 # OUTER_BOUND is the outer edge of the detection zone (edge furthest away from the sensor)
 # Values are in cm
 INNER_BOUND = 20
-OUTER_BOUND = 200
+OUTER_BOUND = 200  # 2 metres maximum.  any further away and we're not interested!
 
-# Now we call display_begin to start up the messages on the screen
+# Clear and decorate the screen
 display_begin()
 
-# While True is a way of making something loop forever.
-# (While will only run the code below it if the X in while X is the same value as True).
-# Since the True in while True is always true, the code under the while will loop forever.
+# The loop here will continue forever (i.e. while True is True)
+# The code indented below is performed within the loop
 while True:
     GPIO.output(TRIG, False)                     #  Set the signal on the TRIG pin to LOW (eg. off)
-    logger.info("Waiting For Sensor To Settle")
+    # print("Waiting For Sensor To Settle")
     time.sleep(0.1)                              #  Delay of 0.1 seconds
-    logger.info("Finished waiting For Sensor To Settle")
 
     # Send a trigger pulse
     GPIO.output(TRIG, True)                      #  Set the signal on the TRIG pin to HIGH (eg. on)
@@ -141,22 +126,24 @@ while True:
     # Prepare for writing some new messages to the screen
     sys.stdout.write("\u001b[13;1H")             #  start at a consistent position in window
 
-    # If the most recent pair of distances show a pattern of moving from outside to inside the 'detection zone'
+    # If the measured distances indicate the object is moving into the 'detection zone'
     if((current_distance > INNER_BOUND and current_distance < OUTER_BOUND) and
        (previous_distance <= INNER_BOUND or previous_distance >= OUTER_BOUND)):
+       
         # Play a sound in a separate thread, so that it doesn't interrupt the rest of our code
-        logger.info("Object entered detection zone. About to play a sound.")
         player.play()
 
-        # Call our message displaying functions to write messages to the screen about what has just happened
+        # Display messages on the screen about what has just happened
         display_detection("Moving into the detection zone")
-        # f is for formatting a message comprised of multiple parts 
+        
+        # f is formats a message comprised of multiple parts 
         measured = f'Previous distance: {previous_distance}  Current distance: {current_distance}'
         display_measured(measured)
 
-    # If the most recent pair of distances show a pattern of moving from inside to outside the 'detection zone'
+    # If the measured distances indicate the object is moving out of the 'detection zone'
     elif((current_distance <= INNER_BOUND or current_distance >= OUTER_BOUND) and
          (previous_distance > INNER_BOUND and previous_distance < OUTER_BOUND)):
+         
         # Play a sound in a separate thread, so that it doesn't interrupt the rest of our code (currently disabled)
         #player.play()
         # Call our message displaying functions to write messages to the screen about what has just happened
