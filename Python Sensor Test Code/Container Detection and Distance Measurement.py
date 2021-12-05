@@ -133,7 +133,7 @@ try:
     display_begin()
 
     # The loop here will continue forever (i.e. while True is True)
-    # The code indented below is performed within the loop
+    # The indented code is performed within the loop
     while True:
         GPIO.output(TRIG, False)                     #  Set the signal on the TRIG pin to LOW (eg. off)
         # print("Waiting For Sensor To Settle")
@@ -169,7 +169,7 @@ try:
             # Display messages on the screen about what has just happened
             display_detection("Moving into the detection zone")
                         
-            # f is formats a message comprised of multiple parts 
+            # f formats a message comprised of multiple parts 
             measured = f'Previous distance: {previous_distance}  Current distance: {current_distance}'
             display_measured(measured)
 
@@ -194,6 +194,6 @@ try:
         # so that we can compare against it next time something is detected
         previous_distance = current_distance
 
-finally:                # receives control from any exit() statement
+finally:                # receives control from any exit() statement or program abort (^C)
     print('\nScript exit.\n')
 # ------------------- end of code --------------------
