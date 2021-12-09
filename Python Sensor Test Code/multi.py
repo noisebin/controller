@@ -109,7 +109,10 @@ class Player:
         try:
             file_path, [audio_data, sample_rate] = file
             logger.info(f'Playing {file_path}')
-            logger.info(f'Sound data of {file_path} has {audio_data.shape[1]} channels')
+            logger.info(f'Sound data of {file_path} has {audio_data.shape} channels')
+            channels = 1
+            if len(audio_data.shape) == 2:
+                channels = 2
             stream_object = self.create_running_output_stream(device_index, sample_rate, channels)
             # Store a reference to the stream that the sound is playing through in a list
             self.streams[running_index] = stream_object
@@ -135,9 +138,10 @@ class Player:
 
     # The create_running_output_stream function creates a 'stream' for the sound data to flow through, into the sound card.
     # Here, index is the number pointing to the sound card that we want the stream to play into
-    def create_running_output_stream(self, index, sample_rate):
+    def create_running_output_stream(self, index, sample_rate, channels):
         output = sounddevice.OutputStream(
             device=index,
+            channels = channels,
             dtype=self.DATA_TYPE
         )
         output.start()
