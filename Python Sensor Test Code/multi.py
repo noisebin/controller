@@ -109,15 +109,20 @@ class Player:
         try:
             file_path, [audio_data, sample_rate] = file
             logger.info(f'Playing {file_path}')
-            sounddevice.play(audio_data, sample_rate, device=device_index)
+            logger.info(f'Sound data of {file_path} has {audio_data.shape} channels')
+            channels = 1
+            if len(audio_data.shape) == 2:
+                channels = 2
+            stream_object = self.create_running_output_stream(device_index, sample_rate, channels)
             # Store a reference to the stream that the sound is playing through in a list
-            self.streams[running_index] = sounddevice.get_stream
+            self.streams[running_index] = stream_object
             # While the sound is playing on the stream, we want to tell the rest of the code
             # that the stream is busy (running) by setting one of the slots in the 'running' list to True.
             self.running[running_index] = True
             # Wait for the sound to finish playing
             logger.info(f'Waiting for {file_path} to finish playing on device {device_index}')
-            sounddevice.wait()
+            stream_object.write(audio_data)
+            stream_object.close()
             logger.info(f'Finished waiting for {file_path} to finish playing on device {device_index}')
             # As soon as the sound has finished playing on the stream, we set the same slot in the 'running' list to False
             # So that the rest of the code knows that that stream is not busy (running) any more.
@@ -129,6 +134,18 @@ class Player:
             # so that next time a sound is picked to play, it is (hopefully) not the same broken one.
             logger.info(f'Error playing {file_path} on device {device_index}. Setting running to False for this device.')
             self.running[running_index] = False
+            stream_object.close()
+
+    # The create_running_output_stream function creates a 'stream' for the sound data to flow through, into the sound card.
+    # Here, index is the number pointing to the sound card that we want the stream to play into
+    def create_running_output_stream(self, index, sample_rate, channels):
+        output = sounddevice.OutputStream(
+            device=index,
+            channels = channels,
+            dtype=self.DATA_TYPE
+        )
+        output.start()
+        return output
 
     def get_usb_sound_card_indices(self):
         self.usb_sound_card_indices = list(filter(lambda x: x is not False,
