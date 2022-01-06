@@ -149,12 +149,6 @@ class Noisebin:
             # ------------------- end of code --------------------
 
         if sensor == 'l':
-            ContSensor = LineSensor(21) #  Make the Light sensor look for a signal on pin 21
-            # Tell the light sensor code to print a message when the line of light is un-broken
-            ContSensor.when_line = lambda: handle_line()
-            # Tell the light sensor to play a sound when the line of light is broken
-            ContSensor.when_no_line = lambda: handle_no_line(player)
-
             def handle_line():
                 logger.info('Waiting for container')
 
@@ -162,6 +156,14 @@ class Noisebin:
                 logger.info('Container detected. Getting ready to play a sound.')
                 player.play()
 
+            ContSensor = LineSensor(21) #  Make the Light sensor look for a signal on pin 21
+            # Tell the light sensor code to print a message when the line of light is un-broken
+            ContSensor.when_line = lambda: handle_line()
+            # Tell the light sensor to play a sound when the line of light is broken
+            ContSensor.when_no_line = lambda: handle_no_line(player)
+
+            while(True):
+                time.sleep(0.1)
 
     def signal_handler(self, signal, frame):
         print('Signal received.  Hold on a sec.')
