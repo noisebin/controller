@@ -10,12 +10,13 @@ detectpeople = (args.sensor == "u" or args.sensor == "ultra")
 
 
 if detectpeople == True:
-    print ("hey, there are people here !!")
+    print ("hey, looking for people here !!")
     noisebin = Noisebin('u')
 else:
     print ('Not looking for people')
+    
 if detectbottles == True:
-    print ('whoops - that was a bottle')
+    print ('whoops - looking for a bottle')
     noisebin = Noisebin('l')
 else:
     print ("not looking for bottles") 
