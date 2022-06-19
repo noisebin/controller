@@ -1,9 +1,11 @@
-# from inspect import getmembers
 from pprint import pprint, pformat
 
 class Event():
     '''
     Event helpers
+    
+    Supports:
+        SQLiteEventStream class
     '''  
 
     def __init__(self, device_name, e):
@@ -19,13 +21,10 @@ class Event():
 
         '''
 
-        # print(f'Event args: {device_name}: {pformat(e)}')
+        # print(f'Event args received: {device_name}: {pformat(e)}')
         self.name = device_name
         for k, v in e.items():
             if (k == 'gpio'): k = 'pin'
             if (k == 'sampled_at'): k = 'timestamp'
             if (k == 'value'): k = 'state'
             setattr(self,k,v)
-
-    # def __str__(self):
-    #     return f"{self.name} is {self.age} years old"

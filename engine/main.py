@@ -2,9 +2,7 @@ import time
 
 from fabric.configuration import Configuration 
 from fabric.logging import Logger
-# from fabric.state import StateMachine  # absorbed into System
 from fabric.system import System
-# from dotmap import DotMap
 from inspect import getmembers
 from pprint import pprint, pformat
 
