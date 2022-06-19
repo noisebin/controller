@@ -1,0 +1,26 @@
+{
+  "code_version": "0.2.0",
+  "scope": "Loading and parsing configuration",
+  "name": "noisebin",
+  "params":
+    {
+        "console":     false,
+        "database":    "noisebin.db",
+        "event_table": "event",
+        "event_attributes": ["timestamp", "device", "name", "pin", "state"],
+        "log_table":   "log",
+        "logfile":     "noisebin.log"
+    },
+  "devices": [
+    {
+        "device_type": "switch",
+        "name": "leftbutton",
+        "gpio": 6
+    },
+    {
+        "device_type": "switch",
+        "name": "rightbutton",
+        "gpio": 5
+    }
+  ]
+}
