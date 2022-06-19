@@ -26,7 +26,8 @@ DEFAULT_ATTRIBUTES_LIST = ['timestamp', 'device_type', 'name', 'pin', 'state']
 class SQLiteEventStream():
     '''
     Event stream handler for SQLite
-    '''  
+    '''
+    event_table = None
 
     def __init__(self):
         '''
@@ -57,13 +58,15 @@ class SQLiteEventStream():
             self.attributes = DEFAULT_ATTRIBUTES_LIST
 
         # Create event table if needed
-        create_table_sql = 'CREATE TABLE IF NOT EXISTS event (timestamp TIMESTAMP, device_type TEXT, name TEXT, pin TEXT, state INTEGER);'
-        log.debug(f'Create table sql: {create_table_sql}')
-        
-        conn = sqlite3.connect(self.database)
-        conn.execute(create_table_sql)
-        conn.commit()
-        conn.close()
+        if (self.event_table is None):
+            create_table_sql = 'CREATE TABLE IF NOT EXISTS event (timestamp TIMESTAMP, device_type TEXT, name TEXT, pin TEXT, state INTEGER);'
+            log.debug(f'Create table sql: {create_table_sql}')
+            
+            conn = sqlite3.connect(self.database)
+            conn.execute(create_table_sql)
+            conn.commit()
+            conn.close()
+            self.event_table = 'created'
 
     def store(self, event):
         '''
@@ -75,7 +78,7 @@ class SQLiteEventStream():
             None
         '''
         
-        # print(f'Extracting values from event: {vars(event)}\n')
+        # print(f'event.store: Extracting values from event: {vars(event)}\n')
         
         insert_sql = f'INSERT INTO event (timestamp, device_type, name, pin, state) \
             VALUES ("{event.timestamp}", "{event.device_type}", "{event.name}", "{event.pin}", {event.state});'

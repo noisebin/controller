@@ -6,7 +6,7 @@ class Event():
     Event helpers
     '''  
 
-    def __init__(self, e):
+    def __init__(self, device_name, e):
         '''
         Parameters expected:
             {
@@ -19,10 +19,12 @@ class Event():
 
         '''
 
-        # print(f'Event args: {pformat(e)}')
-        # self.name = e['name']
+        # print(f'Event args: {device_name}: {pformat(e)}')
+        self.name = device_name
         for k, v in e.items():
             if (k == 'gpio'): k = 'pin'
+            if (k == 'sampled_at'): k = 'timestamp'
+            if (k == 'value'): k = 'state'
             setattr(self,k,v)
 
     # def __str__(self):

@@ -24,7 +24,6 @@ class System(object):
         if cls._instance is None:
             cls._instance = super(System, cls).__new__(cls)
             
-
             log.debug(f'Created System singleton ID {id(log)}')
             
             setattr(cls._instance,'input',DotMap({}))
@@ -46,22 +45,26 @@ class System(object):
         log.info(f'Configuring {len(cfg.devices)} devices:')
         for d in cfg.devices:
             if (d['device_type'] == 'switch'):
-                s = Switch(d)
-                c = DotMap(s.context)
-                n = s.context["name"]
+                n = d['name']
+                self.input[n] = {}
                 node = self.input[n]
-                # node['context'] = c
-                node['device_type'] = c['device_type']
-                node['pin'] = c['gpio']
+                s = Switch(d,node) # and embed device in System object
+
+                # c = DotMap(s.context)  # Not in use?
+                node['device_type'] = d['device_type']
+                node['pin'] = d['gpio']
+                
                 node['status'] = 'built'
                 node['value'] = s.sample()
                 node['sampled_at'] = datetime.now()
                 node['driver'] = s.driver
                 
-                s.status = node['value']  
+                # s.status = node['value']  
                 # cunning trick: device object can now update status directly via self.status
+                # ---------- weird and fragile ------------
+                # replace by giving device object a pointer to itself in System
                 
-                log.info(f'Switch device: {d["name"]} ID {id(s)} constructed as {pformat(c)}')
+                log.info(f'Switch device: {d["name"]} ID {id(s)} constructed as {pformat(node)}')
 
                 # log.info(f'\n\n\nDriver consists of {pformat(vars(s.driver))}')
                 # log.info(f'\n\n\nDriver consists of {pformat(getmembers(s.driver))}')
