@@ -52,7 +52,10 @@ class System(object):
                 
                 log.debug(f'Switch device: {d["name"]} ID {id(s)} constructed as {pformat(node)}')
 
-                s.test()       # animates but doesn't verify yet.  TODO
+                # s.test()       
+                # Cannot set inputs that are real pins, only Mock pins.
+                # Even with Mocks, this animates and gets the resulting 'state' but does not alert.
+                # May be useless, get removed.  TODO
 
         # store events into the event queue, and log them.
                     

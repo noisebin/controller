@@ -14,6 +14,9 @@ from copy import deepcopy
 from fabric.logging import Logger
 from fabric.configuration import Configuration
 from fabric.event import Event
+
+# Specify preferred pin library sub-resource for gpiozero via environment:
+# export GPIOZERO_PIN_FACTORY=lgpio # before program start
 from gpiozero import Device, LineSensor
 from fabric.sqlite_events import SQLiteEventStream
 from pprint import pprint, pformat
@@ -24,12 +27,17 @@ log = Logger()  # or Logger(cfg.params) if they weren't already injected during 
 # log.info(f'Logging is on, console output is: {cfg.params["console"]}')
 
 # if we're not on a Raspberry Pi, fake it ...
-if (Device.pin_factory):
-    log.info(f'Pin factory chosen: {Device.pin_factory}')
-else:
+try:
+    from gpiozero.pins.native import LGPIOFactory
+except ImportError:
     log.warn("Backfilling with Mock pin factory")
     from gpiozero.pins.mock import MockFactory
     Device.pin_factory = MockFactory()
+    
+if (Device.pin_factory):
+    log.info(f'Pin factory chosen: {Device.pin_factory}')
+else:
+    log.warn('No pin factory found!')
 
 
 class Switch():
@@ -119,7 +127,11 @@ class Switch():
         node.driver.pin.drive_high()
         time.sleep(0.2)
         log.info(f'{n} is now {node["value"]}')
-        
+
+class DeviceFail(Exception):
+    '''Handle device failures, general case (can be extended)'''
+    pass
+    
 class Led():
     
     def __new__(self, device):
