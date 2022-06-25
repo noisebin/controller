@@ -1,10 +1,11 @@
 import sqlite3
-from fabric.logging import Logger
 from fabric.configuration import Configuration
 from pprint import pprint, pformat
 
+# from fabric.logging import Logger # Use with great caution - recursion trap !
+# log = Logger()
+
 cfg = Configuration()
-log = Logger()         # Logger(cfg.params) if they weren't already injected during main.assemble()
 
 DEFAULT_DATA_TYPE = 'TEXT'
 DEFAULT_ATTRIBUTES_LIST = ['timestamp', 'device_type', 'name', 'pin', 'state'] 

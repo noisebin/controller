@@ -1,6 +1,6 @@
 {
-  "code_version": "0.2.0",
-  "scope": "Loading and parsing configuration",
+  "code_version": "0.3.0",
+  "scope": "Danger Mouse: friendly logging, sampling, ultrasonics",
   "name": "noisebin",
   "params":
     {
@@ -9,7 +9,8 @@
         "event_table": "event",
         "event_attributes": ["timestamp", "device", "name", "pin", "state"],
         "log_table":   "log",
-        "logfile":     "noisebin.log"
+        "logfile":     "noisebin.log",
+        "log_level":   "DEBUG"
     },
   "devices": [
     {
@@ -21,6 +22,14 @@
         "device_type": "switch",
         "name": "rightbutton",
         "gpio": 5
+    },
+    {
+        "device_type": "ultrasonic",
+        "name": "humaninfront",
+        "echo_gpio": 24,
+        "trigger_gpio": 18,
+        "range": 2,
+        "threshold": 0.5
     }
   ]
 }

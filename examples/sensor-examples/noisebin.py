@@ -7,7 +7,7 @@
 
 # The import command makes separate packages of code available to use in your program
 #
-import sys # sys gives us access to helpful Operating System commands
+import sys, signal # sys gives us access to helpful Operating System commands
 import RPi.GPIO as GPIO # GPIO lets us observe or set the Pi's input and output pin electrical voltages
 import time  # time lets us make the code 'sleep' for an amount of time
 import logging
@@ -21,7 +21,6 @@ from gpiozero import LineSensor
 
 from multi import Player # Player is the package that has the code to play sounds
 
-import sys, signal
 class Noisebin:
     def __init__(self, sensor):
         # create logger named 'nb'

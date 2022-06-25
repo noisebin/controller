@@ -2,17 +2,26 @@ import os
 import sys
 import logging
 from fabric.sqlite_logs import SQLiteLogger
+from pprint import pformat
 
 # from fabric.configuration import Configuration 
 # cfg = Configuration()
 
 class Logger(object):
     _instance = None
-    def __new__(cls,settings={ 'console' : False }):
+    
+    def __new__(cls,settings={ 'console': False, 'log_level': logging.DEBUG }, buffer=[]):
         if cls._instance is None:
-            cls._instance = log = logging.getLogger('nb')
-                        
-            log.setLevel(logging.DEBUG)
+            cls._instance = log = logging.getLogger()
+
+            # Buffer log messages - until we have this wired up correctly
+            # print(f'Logging settings: {pformat(settings)}')
+            # buffer.append(f'Logging settings: {pformat(settings)}')
+
+            if (('log_level' in settings) and (settings['log_level'] is not None)):
+                log_level = settings['log_level']
+            else:
+                log_level = logging.DEBUG
 
             if (('database' in settings) and (settings['database'] is not None)):
                 log_database = settings['database']
@@ -29,7 +38,7 @@ class Logger(object):
                                       "%Y-%m-%d %H:%M:%S")
             
             sql_handler = SQLiteLogger(database = log_database, table = log_table, attributes_list = attributes_list)
-            sql_handler.setLevel(logging.INFO)
+            sql_handler.setLevel(log_level)
             sql_handler.setFormatter(formatter)
 
             # create file handler which logs all the way down to debug messages
@@ -39,12 +48,12 @@ class Logger(object):
                 logfile = 'noisebin.log'
                             
             fh = logging.FileHandler(logfile)
-            fh.setLevel(logging.DEBUG)
+            fh.setLevel(log_level)
 
             # create console handler with a higher log level
             if (('console' in settings) and (settings['console'] is True)):
                 ch = logging.StreamHandler(sys.stdout)
-                ch.setLevel(logging.INFO)
+                ch.setLevel(log_level)
 
             # add formatter to the file and console handlers
             fh.setFormatter(formatter)
@@ -52,13 +61,14 @@ class Logger(object):
 
             # add the handlers to the logger
             log.addHandler(fh)
-            log.addHandler(sql_handler)
             if (settings['console']): 
                 log.addHandler(ch)
+            log.addHandler(sql_handler)
 
-            log.info(f'-------- NoiseBin --------')    
             # it'd be nice to override the formatter to omit %(module)s.%(funcName)s and make this more prominent in the log TODO
             
-            log.debug(f'Created Logger singleton ID {id(log)}')
-
+            buffer.append(f'Created Logger singleton ID {id(log)}')
+                
         return cls._instance
+
+    
