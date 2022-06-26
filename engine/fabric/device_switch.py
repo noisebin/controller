@@ -33,7 +33,8 @@ if (not v):              # i.e. going to build and run the noisebin system
     # if we're not on a Raspberry Pi, fake it ...
     log.debug("Testing if we need a Mock pin factory")
     try:
-        from gpiozero.pins.native import LGPIOFactory
+        from gpiozero.pins.lgpio import LGPIOFactory
+        Device.pin_factory = LGPIOFactory()
     except ImportError:
         log.warn("Backfilling with Mock pin factory")
         from gpiozero.pins.mock import MockFactory
@@ -83,6 +84,7 @@ class Switch():
         # referencing noisebin.input.devicename{stuff} to describe the loggable event
         node['sampled_at'] = datetime.now()  # sampled_at not defined
         node['value'] = True
+        node['name'] = self.name
 
         log.debug(f'Event ON  for {pformat(node)}')
 
@@ -96,6 +98,7 @@ class Switch():
         # referencing noisebin.input.devicename{stuff} to describe the loggable event
         node['sampled_at'] = datetime.now()  # sampled_at not defined
         node['value'] = True
+        node['name'] = self.name
 
         log.debug(f'Event OFF for {pformat(node)}')
 

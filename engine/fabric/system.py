@@ -69,7 +69,7 @@ class System(object):
                 node['name'] = n
                 node['device_type'] = d['device_type']
                 node['device'] = s
-                node['trigger_gpio'] = d['trigger_gpio']
+                node['pin'] = node['trigger_gpio'] = d['trigger_gpio']
                 node['echo_gpio'] = d['echo_gpio']
                 node['status'] = 'built'
                 node['value'] = s.sample

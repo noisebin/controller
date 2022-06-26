@@ -60,8 +60,8 @@ class Ultrasonic():
            threshold_distance=device['threshold'],
            partial=True
            )
-       d.when_out_of_range = self.sense_on  # weird but docs invert the sense of in_range ?
-       d.when_in_range = self.sense_off
+       d.when_in_range = self.sense_on
+       d.when_out_of_range = self.sense_off  # weird but docs invert the sense of in_range ?
        node['driver'] = d
 
        log.debug(f'Driver {self.name} is: {node.driver}')
@@ -72,6 +72,7 @@ class Ultrasonic():
        # referencing noisebin.input.devicename{stuff} to describe the loggable event
        node['sampled_at'] = datetime.now()  # sampled_at not defined
        node['value'] = True
+       node['name'] = self.name
 
        log.debug(f'Event ON  for {pformat(node)}')
 
@@ -85,6 +86,7 @@ class Ultrasonic():
        # referencing noisebin.input.devicename{stuff} to describe the loggable event
        node['sampled_at'] = datetime.now()  # sampled_at not defined
        node['value'] = True
+       node['name'] = self.name
 
        log.debug(f'Event OFF for {pformat(node)}')
 

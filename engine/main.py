@@ -58,7 +58,7 @@ def run():
 
         log.info(' ::::::: Perform specified actions')
         noisebin.actions
-        sleep(2)
+        sleep(0.5)
         run += 1
 
     log.info(' ::::::: Shut down')
