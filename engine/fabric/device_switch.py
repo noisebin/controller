@@ -86,7 +86,8 @@ class Switch():
         node['value'] = True
         node['name'] = self.name
 
-        log.debug(f'Event ON  for {pformat(node)}')
+        # log.debug(f'Event ON  for {pformat(node)}')
+        log.info(f'{self.name} Sampled ON')
 
         e = Event(self.name, node)
         event_stream = SQLiteEventStream()
@@ -97,10 +98,11 @@ class Switch():
 
         # referencing noisebin.input.devicename{stuff} to describe the loggable event
         node['sampled_at'] = datetime.now()  # sampled_at not defined
-        node['value'] = True
+        node['value'] = False
         node['name'] = self.name
 
-        log.debug(f'Event OFF for {pformat(node)}')
+        # log.debug(f'Event OFF for {pformat(node)}')
+        log.info(f'{self.name} Sampled OFF')
 
         e = Event(self.name, node)
         event_stream = SQLiteEventStream()

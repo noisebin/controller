@@ -85,7 +85,7 @@ class Ultrasonic():
 
        # referencing noisebin.input.devicename{stuff} to describe the loggable event
        node['sampled_at'] = datetime.now()  # sampled_at not defined
-       node['value'] = True
+       node['value'] = False
        node['name'] = self.name
 
        log.debug(f'Event OFF for {pformat(node)}')

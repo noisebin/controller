@@ -66,6 +66,7 @@ class SQLiteEventStream():
         '''
         
         # log.debug(f'event.store: Extracting values from event: {vars(event)}\n')
+        # print(f'event.store: Extracting values from event: {pformat(vars(event))}\n')
         
         insert_sql = f'INSERT INTO event (timestamp, device_type, name, pin, state) \
             VALUES ("{event.timestamp}", "{event.device_type}", "{event.name}", "{event.pin}", {event.state});'

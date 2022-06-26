@@ -28,7 +28,7 @@
         "name": "humaninfront",
         "echo_gpio": 24,
         "trigger_gpio": 18,
-        "range": 2,
+        "range": 3,
         "threshold": 0.5
     }
   ]
