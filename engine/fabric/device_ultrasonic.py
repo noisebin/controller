@@ -94,6 +94,9 @@ class Ultrasonic():
        event_stream = SQLiteEventStream()
        event_stream.store(e)
 
+   # ------------- Not In Use ---------------
+   # Switch uses predefined values
+   # Ultrasonic relies on in_range / out_of_range + measure() 
    def sample(self):
        node = self.system_node  # this device, in the System context
 
@@ -106,9 +109,9 @@ class Ultrasonic():
        global cfg, log
        node = self.system_node  # this device, in the System context
 
-       log.debug(f'Measuring for {node.name} (None)')
+       log.debug(f'Measuring for {node.name} (Distance)')
        v = node.driver.distance    # gpiozero method, immediate data
-       log.info(f'Sample of {node.name} is: {v}')
+       log.info(f'Measure of {node.name} distance is: {v}')
 
        pass
        # d = self['driver']  # d = i.driver

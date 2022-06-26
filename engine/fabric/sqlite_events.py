@@ -8,7 +8,7 @@ from pprint import pprint, pformat
 cfg = Configuration()
 
 DEFAULT_DATA_TYPE = 'TEXT'
-DEFAULT_ATTRIBUTES_LIST = ['timestamp', 'device_type', 'name', 'pin', 'state'] 
+DEFAULT_ATTRIBUTES_LIST = ['timestamp', 'device_type', 'name', 'pin', 'state']
 
 class SQLiteEventStream():
     '''
@@ -27,18 +27,18 @@ class SQLiteEventStream():
         Returns:
             None
         '''
-        
+
         settings = cfg.params
         if (('database' in settings) and (settings['database'] is not None)):
             self.database = settings['database']
         else:
             self.database = 'noisebin.db'
-            
+
         if (('table' in settings) and (settings['table'] is not None)):
             self.table = settings['event_table']
         else:
             self.table = 'event'
-            
+
         if (('attributes' in settings) and (settings['attributes'] is not None)):
             self.attributes = settings['event_attributes']
         else:
@@ -48,7 +48,7 @@ class SQLiteEventStream():
         if (self.event_table is None):
             create_table_sql = 'CREATE TABLE IF NOT EXISTS event (timestamp TIMESTAMP, device_type TEXT, name TEXT, pin TEXT, state INTEGER);'
             # log.debug(f'Create table sql: {create_table_sql}')
-            
+
             conn = sqlite3.connect(self.database)
             conn.execute(create_table_sql)
             conn.commit()
@@ -59,22 +59,20 @@ class SQLiteEventStream():
         '''
         Store the event
         Parameters:
-            self: instance of the class
+            self: active instance object of this class
             event: event to be stored
         Returns:
             None
         '''
-        
+
         # log.debug(f'event.store: Extracting values from event: {vars(event)}\n')
-        # print(f'event.store: Extracting values from event: {pformat(vars(event))}\n')
-        
+
         insert_sql = f'INSERT INTO event (timestamp, device_type, name, pin, state) \
             VALUES ("{event.timestamp}", "{event.device_type}", "{event.name}", "{event.pin}", {event.state});'
 
         # log.debug(f'event.store SQL: {insert_sql}')
-        
+
         conn = sqlite3.connect(self.database)
         conn.execute(insert_sql)
         conn.commit()
         conn.close()
-        
