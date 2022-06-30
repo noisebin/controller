@@ -86,8 +86,8 @@ class Ultrasonic():
                name='event',
                attributes=ATTRIBUTES
                )
-       except sqlite3.Warning as em:
-           log.warn(f'Error creating event stream. {em}')
+       except sqlite3.Warning as msg:
+           log.warn(f'Error creating event stream. {msg}')
            return  # we should complain, one feels TODO
 
        event_stream.store(vars(e))
@@ -108,8 +108,8 @@ class Ultrasonic():
                name='event',
                attributes=ATTRIBUTES
                )
-       except sqlite3.Warning as em:
-           log.warn(f'Error creating event stream. {em}')
+       except sqlite3.Warning as msg:
+           log.warn(f'Error creating event stream. {msg}')
            return  # we should complain, one feels
 
        event_stream.store(vars(e))
@@ -132,4 +132,7 @@ class Ultrasonic():
        # log.debug(f'Measuring for {node.name} (Distance)')
        v = node.driver.distance    # gpiozero method, immediate data
        log.info(f'Observed {node.name} distance is: {v}')
+<<<<<<< HEAD
 
+=======
+>>>>>>> b82a48589fe4c3797563c5bf2cbd055fe2dba1bc

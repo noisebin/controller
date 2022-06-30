@@ -28,8 +28,6 @@ from inspect import getmembers
 cfg = Configuration()
 
 log = Logger()  # or Logger(cfg.params) if they weren't already injected during main.assemble()
-# log.info(f'Logging is on, console output is: {cfg.params["console"]}')
-# print(f'Configuration is: {pformat(cfg.args)}')
 
 v = cfg.args['version']  # i.e. going to exit early
 if (not v):              # i.e. going to build and run the noisebin system
@@ -99,8 +97,8 @@ class Switch():
                 name='event',
                 attributes=ATTRIBUTES
                 )
-        except sqlite3.Warning as em:
-            log.warn(f'Error creating event stream. {em}')
+        except sqlite3.Warning as msg:
+            log.warn(f'Error creating event stream. {msg}')
             return  # we should complain, one feels TODO
 
         event_stream.store(vars(e))
@@ -116,14 +114,17 @@ class Switch():
 
         e = Event(self.name, node)
         log.debug(f'switch event is: {pformat(getmembers(e))}')
+<<<<<<< HEAD
 
+=======
+>>>>>>> b82a48589fe4c3797563c5bf2cbd055fe2dba1bc
         try:
             event_stream = DataEntity(
                 name='event',
                 attributes=ATTRIBUTES
                 )
-        except sqlite3.Warning as em:
-            log.warn(f'Error creating event stream. {em}')
+        except sqlite3.Warning as msg:
+            log.warn(f'Error creating event stream. {msg}')
             return  # we should complain, one feels
 
         event_stream.store(vars(e))
