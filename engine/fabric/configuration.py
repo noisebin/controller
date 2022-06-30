@@ -86,7 +86,8 @@ class Configuration(object):
                 log.setLevel(args.log_level)
 
             buffer.append(f"Loaded configuration from {config_fn}")
-            buffer.append(f"Initial configuration is: {pformat(cfg.__dict__)}")
+            buffer.append(f"Initial configuration is: {pformat(vars(cfg))}")
+            # buffer.append(f"Initial configuration is: {pformat(cfg.__dict__)}")
 
             log.info('------- NoiseBin -------')
             for msg in buffer:
