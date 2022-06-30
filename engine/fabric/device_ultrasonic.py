@@ -14,10 +14,12 @@ from fabric.logging import Logger
 from fabric.configuration import Configuration
 from fabric.event import Event
 
+ATTRIBUTES={'timestamp': 'TIMESTAMP', 'device_type': 'TEXT', 'name': 'TEXT', 'pin': 'TEXT', 'state': 'INTEGER'}
+
 # Specify preferred pin library sub-resource for gpiozero via environment:
 # export GPIOZERO_PIN_FACTORY=lgpio # before program start
 from gpiozero import Device, LineSensor, DistanceSensor
-from fabric.sqlite_events import SQLiteEventStream
+from fabric.event_stream import EventStream
 from pprint import pprint, pformat
 from inspect import getmembers
 
@@ -77,7 +79,16 @@ class Ultrasonic():
        log.debug(f'Event ON  for {pformat(node)}')
 
        e = Event(self.name, node)
-       event_stream = SQLiteEventStream()
+       # event_stream = SQLiteEventStream()
+       try:  # this block belongs in event.py ?
+           event_stream = DataEntity(
+               name='event',
+               attributes=ATTRIBUTES
+               )
+       except sqlite3.Warning as e:
+           print(f'Error creating event stream. {e}')
+           return  # we should complain, one feels
+
        event_stream.store(e)
 
    def sense_off(self):
@@ -91,12 +102,21 @@ class Ultrasonic():
        log.debug(f'Event OFF for {pformat(node)}')
 
        e = Event(self.name, node)
-       event_stream = SQLiteEventStream()
+       # event_stream = SQLiteEventStream()
+       try:
+           event_stream = DataEntity(
+               name='event',
+               attributes=ATTRIBUTES
+               )
+       except sqlite3.Warning as e:
+           print(f'Error creating event stream. {e}')
+           return  # we should complain, one feels
+
        event_stream.store(e)
 
    # ------------- Not In Use ---------------
    # Switch uses predefined values
-   # Ultrasonic relies on in_range / out_of_range + measure() 
+   # Ultrasonic relies on in_range / out_of_range + measure()
    def sample(self):
        node = self.system_node  # this device, in the System context
 

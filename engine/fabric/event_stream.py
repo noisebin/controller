@@ -1,3 +1,4 @@
+from fabric.data_entity import DataEntity
 import sqlite3
 from fabric.configuration import Configuration
 from pprint import pprint, pformat
@@ -10,7 +11,10 @@ cfg = Configuration()
 DEFAULT_DATA_TYPE = 'TEXT'
 DEFAULT_ATTRIBUTES_LIST = ['timestamp', 'device_type', 'name', 'pin', 'state']
 
-class SQLiteEventStream():
+TABLE = 'event'
+ATTRIBUTES={'timestamp': 'TIMESTAMP', 'device_type': 'TEXT', 'name': 'TEXT', 'pin': 'TEXT', 'state': 'INTEGER'}
+
+class EventStream():
     '''
     Event stream handler for SQLite
     '''
@@ -18,7 +22,7 @@ class SQLiteEventStream():
 
     def __init__(self):
         '''
-        SQLiteEventStream class constructor
+        EventStream class constructor
         Parameters:
             self: instance of the class
             database: database

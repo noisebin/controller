@@ -20,8 +20,8 @@
     },
     {
         "device_type": "switch",
-        "name": "rightbutton",
-        "gpio": 5
+        "name": "toggle",
+        "gpio": 13
     },
     {
         "device_type": "ultrasonic",

@@ -13,11 +13,15 @@ from copy import deepcopy
 from fabric.logging import Logger
 from fabric.configuration import Configuration
 from fabric.event import Event
+from fabric.data_entity import DataEntity
+import sqlite3
+
+ATTRIBUTES={'timestamp': 'TIMESTAMP', 'device_type': 'TEXT', 'name': 'TEXT', 'pin': 'TEXT', 'state': 'INTEGER'}
 
 # Specify preferred pin library sub-resource for gpiozero via environment:
 # export GPIOZERO_PIN_FACTORY=lgpio # before program start
 from gpiozero import Device, LineSensor, DistanceSensor
-from fabric.sqlite_events import SQLiteEventStream
+# from fabric.event_stream import EventStream
 from pprint import pprint, pformat
 from inspect import getmembers
 
@@ -86,10 +90,19 @@ class Switch():
         node['value'] = True
         node['name'] = self.name
 
-        log.info(f'{self.name} Sampled ON')
+        log.info(f'Observed event {self.name} ON')
 
         e = Event(self.name, node)
-        event_stream = SQLiteEventStream()
+        # event_stream = SQLiteEventStream()
+        try:  # this block belongs in event.py ?
+            event_stream = DataEntity(
+                name='event',
+                attributes=ATTRIBUTES
+                )
+        except sqlite3.Warning as e:
+            print(f'Error creating event stream. {e}')
+            return  # we should complain, one feels
+
         event_stream.store(e)
 
     def sense_off(self):
@@ -100,10 +113,19 @@ class Switch():
         node['value'] = False
         node['name'] = self.name
 
-        log.info(f'{self.name} Sampled OFF')
+        log.info(f'Observed event {self.name} OFF')
 
         e = Event(self.name, node)
-        event_stream = SQLiteEventStream()
+        # event_stream = SQLiteEventStream()
+        try:
+            event_stream = DataEntity(
+                name='event',
+                attributes=ATTRIBUTES
+                )
+        except sqlite3.Warning as e:
+            print(f'Error creating event stream. {e}')
+            return  # we should complain, one feels
+
         event_stream.store(e)
 
     def sample(self):
@@ -119,29 +141,6 @@ class Switch():
         node = self.system_node  # this device, in the System context
 
         log.debug(f'Measuring for {node.name} (None)')
-        pass
-        # d = self['driver']  # d = i.driver
-        # if (ismethod(inp.measure)):
-        #     inp.measure()
-        #     log.debug('Performed {inp.name}.measure')
-        # node = self.input[inp]
-        #
-        # node['name'] = n
-        # node['device_type'] = d['device_type']
-        # node['pin'] = d['gpio']
-        # node['status'] = 'built'
-        # node['value'] = s.sample()
-        # node = self.system_node  # this device, in the System context
-        #
-        # # referencing noisebin.input.devicename{stuff} to describe the loggable event
-        # node['sampled_at'] = datetime.now()  # sampled_at not defined
-        # node['value'] = True
-        #
-        # log.debug(f'Event OFF for {pformat(node)}')
-        #
-        # e = Event(self.name, node)
-        # event_stream = SQLiteEventStream()
-        # event_stream.store(e)
 
 class DeviceFail(Exception):
     '''Handle device failures, general case (can be extended)'''

@@ -3,7 +3,7 @@ from fabric.logging import Logger
 from fabric.configuration import Configuration
 from fabric.device_switch import Switch  # must come first, due to pin factory initialiser
 from fabric.device_ultrasonic import Ultrasonic
-from fabric.sqlite_events import SQLiteEventStream
+# from fabric.event_stream import EventStream
 from datetime import datetime
 from time import sleep
 from dotmap import DotMap
@@ -53,8 +53,9 @@ class System(object):
                 node['device'] = s
                 node['pin'] = d['gpio']
                 node['status'] = 'built'
-                node['value'] = s.sample
-                node['measure'] = s.measure
+                node['value'] = s.sample()
+                node['sample_fn'] = s.sample
+                node['measure_fn'] = s.measure
                 node['sampled_at'] = datetime.now()
 
                 log.debug(f'Switch device: {d["name"]} ID {id(s)} constructed as {pformat(node)}')
@@ -72,8 +73,9 @@ class System(object):
                 node['pin'] = node['trigger_gpio'] = d['trigger_gpio']
                 node['echo_gpio'] = d['echo_gpio']
                 node['status'] = 'built'
-                node['value'] = s.sample
-                node['measure'] = s.measure
+                node['value'] = s.sample()
+                node['sample_fn'] = s.sample
+                node['measure_fn'] = s.measure
                 node['sampled_at'] = datetime.now()
 
                 log.debug(f'Ultrasonic device: {d["name"]} ID {id(s)} constructed as {pformat(node)}')
@@ -87,7 +89,7 @@ class System(object):
             # log.debug(f'\nInput being measured is {nom}: {pformat(d)}')
 
             d = self.input[nom].device  # device object
-            log.debug(f'Input device {nom} is a: {pformat(d)}')
+            log.debug(f'Input device {nom} is a sampler and a: {pformat(d)}')
             if ((d.measure is not None) and ismethod(d.measure)):
                 d.measure()
                 # log.debug(f'Performed {nom}.measure')

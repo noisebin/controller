@@ -1,15 +1,15 @@
 import os
 import sys
 import logging
-from fabric.sqlite_logs import SQLiteLogger
+from fabric.log_stream import LogStream
 from pprint import pformat
 
-# from fabric.configuration import Configuration 
+# from fabric.configuration import Configuration
 # cfg = Configuration()
 
 class Logger(object):
     _instance = None
-    
+
     def __new__(cls,settings={ 'console': False, 'log_level': logging.DEBUG }, buffer=[]):
         if cls._instance is None:
             cls._instance = log = logging.getLogger()
@@ -27,17 +27,17 @@ class Logger(object):
                 log_database = settings['database']
             else:
                 log_database = 'noisebin.db'
-                
+
             if (('table' in settings) and (settings['table'] is not None)):
                 log_table = settings['event_table']
             else:
                 log_table = 'log'
 
-            attributes_list = ['timestamp', 'levelname', 'message'] 
+            attributes_list = ['timestamp', 'levelname', 'message']
             formatter = logging.Formatter("%(asctime)s %(levelname)s %(module)s.%(funcName)s %(message)s",
                                       "%Y-%m-%d %H:%M:%S")
-            
-            sql_handler = SQLiteLogger(database = log_database, table = log_table, attributes_list = attributes_list)
+
+            sql_handler = LogStream(database = log_database, table = log_table, attributes_list = attributes_list)
             sql_handler.setLevel(log_level)
             sql_handler.setFormatter(formatter)
 
@@ -46,7 +46,7 @@ class Logger(object):
                 logfile = settings['logfile']
             else:
                 logfile = 'noisebin.log'
-                            
+
             fh = logging.FileHandler(logfile)
             fh.setLevel(log_level)
 
@@ -61,14 +61,12 @@ class Logger(object):
 
             # add the handlers to the logger
             log.addHandler(fh)
-            if (settings['console']): 
+            if (settings['console']):
                 log.addHandler(ch)
             log.addHandler(sql_handler)
 
             # it'd be nice to override the formatter to omit %(module)s.%(funcName)s and make this more prominent in the log TODO
-            
-            buffer.append(f'Created Logger singleton ID {id(log)}')
-                
-        return cls._instance
 
-    
+            buffer.append(f'Created Logger singleton ID {id(log)}')
+
+        return cls._instance

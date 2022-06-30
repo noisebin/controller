@@ -3,10 +3,10 @@ from pprint import pprint, pformat
 class Event():
     '''
     Event helpers
-    
+
     Supports:
-        SQLiteEventStream class
-    '''  
+        EventStream class
+    '''
 
     def __init__(self, device_name, e):
         '''

@@ -7,14 +7,14 @@ DEFAULT_SEPARATOR = '|'
 DEFAULT_DATA_TYPE = 'TEXT'
 
 #WARNING: attributes must be choosen from https://docs.python.org/3/library/logging.html#formatter-objects
-DEFAULT_ATTRIBUTES_LIST = ['timestamp', 'levelname', 'name', 'message'] 
+DEFAULT_ATTRIBUTES_LIST = ['timestamp', 'levelname', 'name', 'message']
 
 
-class SQLiteLogger(logging.Handler):
+class LogStream(logging.Handler):
     '''
     Logging handler for SQLite
     Based on Yarin Kessler's sqlite_handler.py https://gist.github.com/ykessler/2662203#file_sqlite_handler.py
-    '''  
+    '''
 
     def __init__(self, database, table, attributes_list):
         '''
@@ -37,7 +37,7 @@ class SQLiteLogger(logging.Handler):
         create_table_sql = 'CREATE TABLE IF NOT EXISTS ' + self.table \
             + ' (' + ((' ' + DEFAULT_DATA_TYPE + ', ').join(self.attributes)) \
             + ' ' + DEFAULT_DATA_TYPE + ');'
-        
+
         # print(create_table_sql)
         conn = sqlite3.connect(self.database)
         conn.execute(create_table_sql)
@@ -65,7 +65,7 @@ class SQLiteLogger(logging.Handler):
             VALUES ("{record.asctime}", "{record.levelname}", "{record.message}");'
 
         # print(insert_sql)
-        
+
         conn = sqlite3.connect(self.database)
         conn.execute(insert_sql)
         conn.commit()
