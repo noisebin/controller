@@ -87,8 +87,8 @@ class Ultrasonic():
                name='event',
                attributes=ATTRIBUTES
                )
-       except sqlite3.Warning as e:
-           log.warn(f'Error creating event stream. {e}')
+       except sqlite3.Warning as em:
+           log.warn(f'Error creating event stream. {em}')
            return  # we should complain, one feels TODO
 
        event_stream.store(e)
@@ -110,8 +110,8 @@ class Ultrasonic():
                name='event',
                attributes=ATTRIBUTES
                )
-       except sqlite3.Warning as e:
-           log.warn(f'Error creating event stream. {e}')
+       except sqlite3.Warning as em:
+           log.warn(f'Error creating event stream. {em}')
            return  # we should complain, one feels
 
        event_stream.store(e)
