@@ -21,7 +21,7 @@ ATTRIBUTES={'timestamp': 'TIMESTAMP', 'device_type': 'TEXT', 'name': 'TEXT', 'pi
 # Specify preferred pin library sub-resource for gpiozero via environment:
 # export GPIOZERO_PIN_FACTORY=lgpio # before program start
 from gpiozero import Device, LineSensor, DistanceSensor
-# from fabric.event_stream import EventStream
+
 from pprint import pprint, pformat
 from inspect import getmembers
 
@@ -73,7 +73,6 @@ class Ultrasonic():
    def sense_on(self):
        node = self.system_node  # this device, in the System context
 
-       # referencing noisebin.input.devicename{stuff} to describe the loggable event
        node['sampled_at'] = datetime.now()  # sampled_at not defined
        node['value'] = True
        node['name'] = self.name
@@ -81,7 +80,7 @@ class Ultrasonic():
        log.debug(f'Event ON  for {pformat(node)}')
 
        e = Event(self.name, node)
-       # event_stream = SQLiteEventStream()
+
        try:  # this block belongs in event.py ? TODO
            event_stream = DataEntity(
                name='event',
@@ -91,12 +90,11 @@ class Ultrasonic():
            log.warn(f'Error creating event stream. {em}')
            return  # we should complain, one feels TODO
 
-       event_stream.store(e)
+       event_stream.store(vars(e))
 
    def sense_off(self):
        node = self.system_node  # this device, in the System context
 
-       # referencing noisebin.input.devicename{stuff} to describe the loggable event
        node['sampled_at'] = datetime.now()  # sampled_at not defined
        node['value'] = False
        node['name'] = self.name
@@ -104,7 +102,7 @@ class Ultrasonic():
        log.debug(f'Event OFF for {pformat(node)}')
 
        e = Event(self.name, node)
-       # event_stream = SQLiteEventStream()
+
        try:
            event_stream = DataEntity(
                name='event',
@@ -114,7 +112,7 @@ class Ultrasonic():
            log.warn(f'Error creating event stream. {em}')
            return  # we should complain, one feels
 
-       event_stream.store(e)
+       event_stream.store(vars(e))
 
    # ------------- Not In Use ---------------
    # Switch uses predefined values
@@ -135,26 +133,3 @@ class Ultrasonic():
        v = node.driver.distance    # gpiozero method, immediate data
        log.info(f'Observed {node.name} distance is: {v}')
 
-       pass
-       # d = self['driver']  # d = i.driver
-       # if (ismethod(inp.measure)):
-       #     inp.measure()
-       #     log.debug('Performed {inp.name}.measure')
-       # node = self.input[inp]
-       #
-       # node['name'] = n
-       # node['device_type'] = d['device_type']
-       # node['pin'] = d['gpio']
-       # node['status'] = 'built'
-       # node['value'] = s.sample()
-       # node = self.system_node  # this device, in the System context
-       #
-       # # referencing noisebin.input.devicename{stuff} to describe the loggable event
-       # node['sampled_at'] = datetime.now()  # sampled_at not defined
-       # node['value'] = True
-       #
-       # log.debug(f'Event OFF for {pformat(node)}')
-       #
-       # e = Event(self.name, node)
-       # event_stream = SQLiteEventStream()
-       # event_stream.store(e)

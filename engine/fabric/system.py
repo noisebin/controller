@@ -3,7 +3,7 @@ from fabric.logging import Logger
 from fabric.configuration import Configuration
 from fabric.device_switch import Switch  # must come first, due to pin factory initialiser
 from fabric.device_ultrasonic import Ultrasonic
-# from fabric.event_stream import EventStream
+
 from datetime import datetime
 from time import sleep
 from dotmap import DotMap
@@ -14,7 +14,6 @@ from pprint import pprint, pformat
 cfg = Configuration()
 log = Logger()  # or Logger(cfg.params) if they weren't already injected during main.assemble()
 
-# event_stream = SQLiteEventStream()  # pass database filename from cfg
 
 class System(object):
     _instance = None

@@ -21,7 +21,7 @@ ATTRIBUTES={'timestamp': 'TIMESTAMP', 'device_type': 'TEXT', 'name': 'TEXT', 'pi
 # Specify preferred pin library sub-resource for gpiozero via environment:
 # export GPIOZERO_PIN_FACTORY=lgpio # before program start
 from gpiozero import Device, LineSensor, DistanceSensor
-# from fabric.event_stream import EventStream
+
 from pprint import pprint, pformat
 from inspect import getmembers
 
@@ -85,7 +85,6 @@ class Switch():
     def sense_on(self):
         node = self.system_node  # this device, in the System context
 
-        # referencing noisebin.input.devicename{stuff} to describe the loggable event
         node['sampled_at'] = datetime.now()  # sampled_at not defined?
         node['value'] = True
         node['name'] = self.name
@@ -93,8 +92,8 @@ class Switch():
         log.info(f'Observed event {self.name} ON')
 
         e = Event(self.name, node)
-        print(f'switch event is: {pformat(getmembers(e))}')
-        # event_stream = SQLiteEventStream()
+        log.debug(f'switch event is: {pformat(getmembers(e))}')
+
         try:  # this block belongs in event.py ? TODO
             event_stream = DataEntity(
                 name='event',
@@ -104,12 +103,11 @@ class Switch():
             log.warn(f'Error creating event stream. {em}')
             return  # we should complain, one feels TODO
 
-        event_stream.store(e.__dict__)
+        event_stream.store(vars(e))
 
     def sense_off(self):
         node = self.system_node  # this device, in the System context
 
-        # referencing noisebin.input.devicename{stuff} to describe the loggable event
         node['sampled_at'] = datetime.now()  # sampled_at not defined?
         node['value'] = False
         node['name'] = self.name
@@ -117,8 +115,8 @@ class Switch():
         log.info(f'Observed event {self.name} OFF')
 
         e = Event(self.name, node)
-        print(f'switch event is: {pformat(getmembers(e))}')
-        # event_stream = SQLiteEventStream()
+        log.debug(f'switch event is: {pformat(getmembers(e))}')
+
         try:
             event_stream = DataEntity(
                 name='event',
@@ -128,7 +126,7 @@ class Switch():
             log.warn(f'Error creating event stream. {em}')
             return  # we should complain, one feels
 
-        event_stream.store(e.__dict__)
+        event_stream.store(vars(e))
 
     def sample(self):
         node = self.system_node  # this device, in the System context
