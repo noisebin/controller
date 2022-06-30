@@ -26,7 +26,7 @@ class Configuration(object):
 
             parser = argparse.ArgumentParser()
 
-            parser.add_argument("-c", "--config",    help="Specify a configuration file", type=int)
+            parser.add_argument("-c", "--config",    help="Specify a configuration file") # , type=int)
             parser.add_argument("-l", "--log-level", help="Enable logging to console",    choices=LOGLEVELS)
             parser.add_argument("-o", "--output",    help="Enable console output",        action="store_true")
             parser.add_argument("-r", "--run-length",help="Run length count (default=3)", type=int)

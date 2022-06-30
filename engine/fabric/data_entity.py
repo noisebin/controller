@@ -95,10 +95,12 @@ class DataEntity():
             raise sqlite3.Warning(f'Table {self.table} does not exist when storing data.')
         else:
             # log.debug(f'event.store: Extracting values from event: {vars(event)}\n')
+            print(f'event.store: Extracting values from event: {pformat(datum)}\n')
+            print(f'event.store: Templating from: {pformat(self.attributes)}\n')
 
             s1 = 'INSERT INTO ' + self.table + ' ('
             s2 = ') VALUES ('
-            for a in datum.keys():
+            for a in self.attributes.keys():
                 s1 += f'{a}, '
                 s2 += f'\'{datum[a]}\', '
             store_sql = s1[:-2] + s2[:-2] + ')'

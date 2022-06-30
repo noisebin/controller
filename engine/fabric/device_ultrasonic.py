@@ -13,13 +13,15 @@ from copy import deepcopy
 from fabric.logging import Logger
 from fabric.configuration import Configuration
 from fabric.event import Event
+from fabric.data_entity import DataEntity
+import sqlite3
 
 ATTRIBUTES={'timestamp': 'TIMESTAMP', 'device_type': 'TEXT', 'name': 'TEXT', 'pin': 'TEXT', 'state': 'INTEGER'}
 
 # Specify preferred pin library sub-resource for gpiozero via environment:
 # export GPIOZERO_PIN_FACTORY=lgpio # before program start
 from gpiozero import Device, LineSensor, DistanceSensor
-from fabric.event_stream import EventStream
+# from fabric.event_stream import EventStream
 from pprint import pprint, pformat
 from inspect import getmembers
 
@@ -129,9 +131,9 @@ class Ultrasonic():
        global cfg, log
        node = self.system_node  # this device, in the System context
 
-       log.debug(f'Measuring for {node.name} (Distance)')
+       # log.debug(f'Measuring for {node.name} (Distance)')
        v = node.driver.distance    # gpiozero method, immediate data
-       log.info(f'Measure of {node.name} distance is: {v}')
+       log.info(f'Observed {node.name} distance is: {v}')
 
        pass
        # d = self['driver']  # d = i.driver

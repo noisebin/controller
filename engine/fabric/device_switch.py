@@ -93,17 +93,18 @@ class Switch():
         log.info(f'Observed event {self.name} ON')
 
         e = Event(self.name, node)
+        print(f'switch event is: {pformat(getmembers(e))}')
         # event_stream = SQLiteEventStream()
         try:  # this block belongs in event.py ? TODO
             event_stream = DataEntity(
                 name='event',
                 attributes=ATTRIBUTES
                 )
-        except sqlite3.Warning as e:
-            log.warn(f'Error creating event stream. {e}')
+        except sqlite3.Warning as em:
+            log.warn(f'Error creating event stream. {em}')
             return  # we should complain, one feels TODO
 
-        event_stream.store(e)
+        event_stream.store(e.__dict__)
 
     def sense_off(self):
         node = self.system_node  # this device, in the System context
@@ -116,17 +117,18 @@ class Switch():
         log.info(f'Observed event {self.name} OFF')
 
         e = Event(self.name, node)
+        print(f'switch event is: {pformat(getmembers(e))}')
         # event_stream = SQLiteEventStream()
         try:
             event_stream = DataEntity(
                 name='event',
                 attributes=ATTRIBUTES
                 )
-        except sqlite3.Warning as e:
-            log.warn(f'Error creating event stream. {e}')
+        except sqlite3.Warning as em:
+            log.warn(f'Error creating event stream. {em}')
             return  # we should complain, one feels
 
-        event_stream.store(e)
+        event_stream.store(e.__dict__)
 
     def sample(self):
         node = self.system_node  # this device, in the System context
