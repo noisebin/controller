@@ -132,7 +132,4 @@ class Ultrasonic():
        # log.debug(f'Measuring for {node.name} (Distance)')
        v = node.driver.distance    # gpiozero method, immediate data
        log.info(f'Observed {node.name} distance is: {v}')
-<<<<<<< HEAD
 
-=======
->>>>>>> b82a48589fe4c3797563c5bf2cbd055fe2dba1bc

@@ -1,4 +1,8 @@
+from fabric.logging import Logger
 from pprint import pprint, pformat
+
+log = Logger()
+
 
 class Event():
     '''

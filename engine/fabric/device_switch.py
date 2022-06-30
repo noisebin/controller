@@ -114,10 +114,7 @@ class Switch():
 
         e = Event(self.name, node)
         log.debug(f'switch event is: {pformat(getmembers(e))}')
-<<<<<<< HEAD
 
-=======
->>>>>>> b82a48589fe4c3797563c5bf2cbd055fe2dba1bc
         try:
             event_stream = DataEntity(
                 name='event',
