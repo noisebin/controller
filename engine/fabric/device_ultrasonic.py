@@ -73,7 +73,6 @@ class Ultrasonic():
    def sense_on(self):
        node = self.system_node  # this device, in the System context
 
-       # referencing noisebin.input.devicename{stuff} to describe the loggable event
        node['sampled_at'] = datetime.now()  # sampled_at not defined
        node['value'] = True
        node['name'] = self.name
@@ -81,14 +80,14 @@ class Ultrasonic():
        log.debug(f'Event ON  for {pformat(node)}')
 
        e = Event(self.name, node)
-       # event_stream = SQLiteEventStream()
+
        try:  # this block belongs in event.py ? TODO
            event_stream = DataEntity(
                name='event',
                attributes=ATTRIBUTES
                )
-       except sqlite3.Warning as em:
-           log.warn(f'Error creating event stream. {em}')
+       except sqlite3.Warning as msg:
+           log.warn(f'Error creating event stream. {msg}')
            return  # we should complain, one feels TODO
 
        event_stream.store(e)
@@ -96,7 +95,6 @@ class Ultrasonic():
    def sense_off(self):
        node = self.system_node  # this device, in the System context
 
-       # referencing noisebin.input.devicename{stuff} to describe the loggable event
        node['sampled_at'] = datetime.now()  # sampled_at not defined
        node['value'] = False
        node['name'] = self.name
@@ -104,14 +102,14 @@ class Ultrasonic():
        log.debug(f'Event OFF for {pformat(node)}')
 
        e = Event(self.name, node)
-       # event_stream = SQLiteEventStream()
+
        try:
            event_stream = DataEntity(
                name='event',
                attributes=ATTRIBUTES
                )
-       except sqlite3.Warning as em:
-           log.warn(f'Error creating event stream. {em}')
+       except sqlite3.Warning as msg:
+           log.warn(f'Error creating event stream. {msg}')
            return  # we should complain, one feels
 
        event_stream.store(e)
@@ -134,27 +132,3 @@ class Ultrasonic():
        # log.debug(f'Measuring for {node.name} (Distance)')
        v = node.driver.distance    # gpiozero method, immediate data
        log.info(f'Observed {node.name} distance is: {v}')
-
-       pass
-       # d = self['driver']  # d = i.driver
-       # if (ismethod(inp.measure)):
-       #     inp.measure()
-       #     log.debug('Performed {inp.name}.measure')
-       # node = self.input[inp]
-       #
-       # node['name'] = n
-       # node['device_type'] = d['device_type']
-       # node['pin'] = d['gpio']
-       # node['status'] = 'built'
-       # node['value'] = s.sample()
-       # node = self.system_node  # this device, in the System context
-       #
-       # # referencing noisebin.input.devicename{stuff} to describe the loggable event
-       # node['sampled_at'] = datetime.now()  # sampled_at not defined
-       # node['value'] = True
-       #
-       # log.debug(f'Event OFF for {pformat(node)}')
-       #
-       # e = Event(self.name, node)
-       # event_stream = SQLiteEventStream()
-       # event_stream.store(e)

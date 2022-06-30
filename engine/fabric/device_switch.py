@@ -28,8 +28,6 @@ from inspect import getmembers
 cfg = Configuration()
 
 log = Logger()  # or Logger(cfg.params) if they weren't already injected during main.assemble()
-# log.info(f'Logging is on, console output is: {cfg.params["console"]}')
-# print(f'Configuration is: {pformat(cfg.args)}')
 
 v = cfg.args['version']  # i.e. going to exit early
 if (not v):              # i.e. going to build and run the noisebin system
@@ -85,7 +83,6 @@ class Switch():
     def sense_on(self):
         node = self.system_node  # this device, in the System context
 
-        # referencing noisebin.input.devicename{stuff} to describe the loggable event
         node['sampled_at'] = datetime.now()  # sampled_at not defined?
         node['value'] = True
         node['name'] = self.name
@@ -93,15 +90,15 @@ class Switch():
         log.info(f'Observed event {self.name} ON')
 
         e = Event(self.name, node)
-        print(f'switch event is: {pformat(getmembers(e))}')
-        # event_stream = SQLiteEventStream()
+        log.debug(f'switch event is: {pformat(getmembers(e))}')
+
         try:  # this block belongs in event.py ? TODO
             event_stream = DataEntity(
                 name='event',
                 attributes=ATTRIBUTES
                 )
-        except sqlite3.Warning as em:
-            log.warn(f'Error creating event stream. {em}')
+        except sqlite3.Warning as msg:
+            log.warn(f'Error creating event stream. {msg}')
             return  # we should complain, one feels TODO
 
         event_stream.store(e.__dict__)
@@ -109,7 +106,6 @@ class Switch():
     def sense_off(self):
         node = self.system_node  # this device, in the System context
 
-        # referencing noisebin.input.devicename{stuff} to describe the loggable event
         node['sampled_at'] = datetime.now()  # sampled_at not defined?
         node['value'] = False
         node['name'] = self.name
@@ -117,15 +113,14 @@ class Switch():
         log.info(f'Observed event {self.name} OFF')
 
         e = Event(self.name, node)
-        print(f'switch event is: {pformat(getmembers(e))}')
-        # event_stream = SQLiteEventStream()
+        log.debug(f'switch event is: {pformat(getmembers(e))}')
         try:
             event_stream = DataEntity(
                 name='event',
                 attributes=ATTRIBUTES
                 )
-        except sqlite3.Warning as em:
-            log.warn(f'Error creating event stream. {em}')
+        except sqlite3.Warning as msg:
+            log.warn(f'Error creating event stream. {msg}')
             return  # we should complain, one feels
 
         event_stream.store(e.__dict__)

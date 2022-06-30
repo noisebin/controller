@@ -31,9 +31,6 @@ def assemble():
 
     # print(f'noisebin contains: {pformat(getmembers(noisebin))}')
 
-    # Also create the event, action and command queues
-    # and attach them
-
 def run():
     cfg = Configuration()
     log = Logger(cfg.params)
@@ -62,13 +59,6 @@ def run():
         run += 1
 
     log.info(' ::::::: Shut down')
-
-    # try:
-    # finally:
-    #     # receives control from any exit() statement or program abort (^C)
-    #     print(f'{noisebin.name}: exiting on signal.\n')
-    #     pass
-
 
 
 if __name__ == "__main__":

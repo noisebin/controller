@@ -94,9 +94,8 @@ class DataEntity():
         if (not self.table_exists):
             raise sqlite3.Warning(f'Table {self.table} does not exist when storing data.')
         else:
-            # log.debug(f'event.store: Extracting values from event: {vars(event)}\n')
-            print(f'event.store: Extracting values from event: {pformat(datum)}\n')
-            print(f'event.store: Templating from: {pformat(self.attributes)}\n')
+            log.debug(f'event.store: Extracting values from event: {pformat(datum)}\n')
+            log.debug(f'event.store: ... with templating from: {pformat(self.attributes)}\n')
 
             s1 = 'INSERT INTO ' + self.table + ' ('
             s2 = ') VALUES ('
@@ -104,9 +103,6 @@ class DataEntity():
                 s1 += f'{a}, '
                 s2 += f'\'{datum[a]}\', '
             store_sql = s1[:-2] + s2[:-2] + ')'
-
-            # insert_sql = f'INSERT INTO event (timestamp, device_type, name, pin, state) \
-                # VALUES ("{event.timestamp}", "{event.device_type}", "{event.name}", "{event.pin}", {event.state});'
 
             log.debug(f'Store SQL: {store_sql}')
 

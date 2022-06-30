@@ -35,8 +35,9 @@ class System(object):
 
     def signal_handler(self, signal, frame):
         print('\nSignal caught.  Hold on ...')
+        log.debug('Exiting on receipt of signal') # might need a try block TODO
         sleep(0.3)
-        sys.exit(0)         # hands over to the finally: clause
+        sys.exit(0)         # th-th-th-that's all, folks
 
     def build(self):
         log.info(f'Configuring {len(cfg.devices)} devices:')
