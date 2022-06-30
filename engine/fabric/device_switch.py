@@ -94,14 +94,14 @@ class Switch():
 
         e = Event(self.name, node)
         # event_stream = SQLiteEventStream()
-        try:  # this block belongs in event.py ?
+        try:  # this block belongs in event.py ? TODO
             event_stream = DataEntity(
                 name='event',
                 attributes=ATTRIBUTES
                 )
         except sqlite3.Warning as e:
-            print(f'Error creating event stream. {e}')
-            return  # we should complain, one feels
+            log.warn(f'Error creating event stream. {e}')
+            return  # we should complain, one feels TODO
 
         event_stream.store(e)
 
@@ -123,7 +123,7 @@ class Switch():
                 attributes=ATTRIBUTES
                 )
         except sqlite3.Warning as e:
-            print(f'Error creating event stream. {e}')
+            log.warn(f'Error creating event stream. {e}')
             return  # we should complain, one feels
 
         event_stream.store(e)
