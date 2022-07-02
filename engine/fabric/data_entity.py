@@ -1,15 +1,10 @@
 import sqlite3
-from fabric.configuration import Configuration
-from fabric.logging import Logger
+# from fabric.configuration import Configuration
+# from fabric.logging import Logger   # Use with great caution - recursion trap !
 from pprint import pprint, pformat
 
-# from fabric.logging import Logger # Use with great caution - recursion trap !
-log = Logger()
-
-cfg = Configuration()
-
-DEFAULT_DATA_TYPE = 'TEXT'
-ATTRIBUTES_LIST = ['timestamp', 'device_type', 'name', 'metric', 'value']
+# log = Logger()
+# cfg = Configuration()
 
 class DataEntity():
     '''
@@ -19,25 +14,24 @@ class DataEntity():
     attributes = []
     table_exists = False
 
-    def __init__(self, name=None, attributes=None):
+    def __init__(self, database=None, table=None, attributes=None):
         '''
         DataEntity class constructor
         Parameters:
             self: instance of the class
             table: entity table name
-            attributes_list: entity table columns
+            attributes: entity table columns
         Returns:
             None
         '''
 
-        settings = cfg.params
-        if (('database' in settings) and (settings['database'] is not None)):
-            self.database = settings['database']
+        if (database is not None):
+            self.database = database
         else:
             self.database = 'noisebin.db'
 
-        if (name is not None):
-            self.table = name
+        if (table is not None):
+            self.table = table
 
         if (attributes is not None):
             self.attributes = attributes
@@ -52,10 +46,10 @@ class DataEntity():
                 cursor = conn.execute(probe_sql)
                 result = cursor.fetchall()
 
-                log.debug(f'Schema query result: {pformat(result)}')
+                # log.debug(f'Schema query result: {pformat(result)}')
                 if (result == []):
                     # No table, but can we make one?
-                    log.debug(f'{self.table} table not found in {self.database}')
+                    # log.debug(f'{self.table} table not found in {self.database}')
 
                     if (len(self.attributes)):  # Yes, we can!
                         create_table_sql = 'CREATE TABLE IF NOT EXISTS ' + self.table + ' ('
@@ -63,7 +57,7 @@ class DataEntity():
                             # log.debug(f'Have attribute {a} of type {self.attributes[a]}')
                             create_table_sql += f'{a} {self.attributes[a]}, '
                         create_table_sql = create_table_sql[:-2] + ')'
-                        log.debug(f'Creating {self.table} with: {create_table_sql}')
+                        # log.debug(f'Creating {self.table} with: {create_table_sql}')
                         conn.execute(create_table_sql)
                         conn.commit()  # boo-whacka-boom-bam!
                         conn.close()
@@ -78,8 +72,8 @@ class DataEntity():
                     self.table_exists = True
                     cursor.close();
 
-            log.debug(f'Table {self.table} {"exists" if self.table_exists else "does not exist"}')
-            log.debug(f'{self.table} attributes are: {pformat(self.attributes)}')
+            # log.debug(f'Table {self.table} {"exists" if self.table_exists else "does not exist"}')
+            # log.debug(f'{self.table} attributes are: {pformat(self.attributes)}')
 
     def store(self, datum):
         '''
@@ -94,8 +88,8 @@ class DataEntity():
         if (not self.table_exists):
             raise sqlite3.Warning(f'Table {self.table} does not exist when storing data.')
         else:
-            log.debug(f'event.store: Extracting values from event: {pformat(datum)}\n')
-            log.debug(f'event.store: ... with templating from: {pformat(self.attributes)}\n')
+            # log.debug(f'event.store: Extracting values from event: {pformat(datum)}\n')
+            # log.debug(f'event.store: ... with templating from: {pformat(self.attributes)}\n')
 
             s1 = 'INSERT INTO ' + self.table + ' ('
             s2 = ') VALUES ('
@@ -104,7 +98,7 @@ class DataEntity():
                 s2 += f'\'{datum[a]}\', '
             store_sql = s1[:-2] + s2[:-2] + ')'
 
-            log.debug(f'Store SQL: {store_sql}')
+            # log.debug(f'Store SQL: {store_sql}')
 
             conn = sqlite3.connect(self.database)
             conn.execute(store_sql)
@@ -124,7 +118,7 @@ class DataEntity():
         if (not self.table_exists):
             raise sqlite3.Warning(f'Table {self.table} does not exist when querying data.')
         else:
-            log.debug(f'{self.table} Query: {query}')
+            # log.debug(f'{self.table} Query: {query}')
 
             conn = sqlite3.connect(self.database)
             cursor = conn.execute(query)

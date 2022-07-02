@@ -16,7 +16,7 @@ class LogStream(logging.Handler):
     Based on Yarin Kessler's sqlite_handler.py https://gist.github.com/ykessler/2662203#file_sqlite_handler.py
     '''
 
-    def __init__(self, database, table, attributes_list):
+    def __init__(self, database, table, attributes):
         '''
         SQLiteLogHandler class constructor
         Parameters:
@@ -31,7 +31,7 @@ class LogStream(logging.Handler):
         super().__init__() # for python 3.X
         self.database = database
         self.table = table
-        self.attributes = attributes_list
+        self.attributes = attributes
 
         # Create log table if needed
         create_table_sql = 'CREATE TABLE IF NOT EXISTS ' + self.table \

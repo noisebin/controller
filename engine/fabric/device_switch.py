@@ -13,13 +13,6 @@ from copy import deepcopy
 from fabric.logging import Logger
 from fabric.configuration import Configuration
 from fabric.event import Event
-from fabric.data_entity import DataEntity
-import sqlite3
-
-ATTRIBUTES={'timestamp': 'TIMESTAMP', 'device_type': 'TEXT', 'name': 'TEXT', 'pin': 'TEXT', 'state': 'INTEGER'}
-
-# Specify preferred pin library sub-resource for gpiozero via environment:
-# export GPIOZERO_PIN_FACTORY=lgpio # before program start
 from gpiozero import Device, LineSensor, DistanceSensor
 
 from pprint import pprint, pformat
@@ -27,7 +20,7 @@ from inspect import getmembers
 
 cfg = Configuration()
 
-log = Logger()  # or Logger(cfg.params) if they weren't already injected during main.assemble()
+log = Logger()
 
 v = cfg.args['version']  # i.e. going to exit early
 if (not v):              # i.e. going to build and run the noisebin system
@@ -90,18 +83,9 @@ class Switch():
         log.info(f'Observed event {self.name} ON')
 
         e = Event(self.name, node)
-        log.debug(f'switch event is: {pformat(getmembers(e))}')
+        # log.debug(f'switch event is: {pformat(getmembers(e))}')
 
-        try:  # this block belongs in event.py ? TODO
-            event_stream = DataEntity(
-                name='event',
-                attributes=ATTRIBUTES
-                )
-        except sqlite3.Warning as msg:
-            log.warn(f'Error creating event stream. {msg}')
-            return  # we should complain, one feels TODO
-
-        event_stream.store(vars(e))
+        e.store()
 
     def sense_off(self):
         node = self.system_node  # this device, in the System context
@@ -113,18 +97,9 @@ class Switch():
         log.info(f'Observed event {self.name} OFF')
 
         e = Event(self.name, node)
-        log.debug(f'switch event is: {pformat(getmembers(e))}')
+        # log.debug(f'switch event is: {pformat(getmembers(e))}')
 
-        try:
-            event_stream = DataEntity(
-                name='event',
-                attributes=ATTRIBUTES
-                )
-        except sqlite3.Warning as msg:
-            log.warn(f'Error creating event stream. {msg}')
-            return  # we should complain, one feels
-
-        event_stream.store(vars(e))
+        e.store()
 
     def sample(self):
         node = self.system_node  # this device, in the System context
@@ -137,8 +112,9 @@ class Switch():
     def measure(self):
         global cfg, log
         node = self.system_node  # this device, in the System context
+        ATTRIBUTES_LIST = ['timestamp', 'device_type', 'name', 'metric', 'value']
 
-        log.debug(f'Measuring for {node.name} (None)')
+        log.debug(f'Measures for {node.name} (None)')
 
 class DeviceFail(Exception):
     '''Handle device failures, general case (can be extended)'''

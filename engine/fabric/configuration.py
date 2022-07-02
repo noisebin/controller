@@ -18,11 +18,9 @@ class Configuration(object):
             cls._instance = cfg = super(Configuration, cls).__new__(cls)
 
             # Buffer log messages - we don't have a logger yet.
-            buffer = []
-            # buffer.append('------- NoiseBin -------')
-            buffer.append(f'Created Configuration singleton ID {id(cfg)}')
+            Logger.enqueue(f'Created Configuration singleton ID {id(cfg)}')
 
-            buffer.append(f'Command line args: {pformat(sys.argv)}')
+            Logger.enqueue(f'Command line args: {pformat(sys.argv)}')
 
             parser = argparse.ArgumentParser()
 
@@ -41,7 +39,7 @@ class Configuration(object):
             if (args.output):
                 setattr(cls._instance,'params',{'console' : True})
                 interactive_console = True
-                buffer.append("console logging option specified, enabling log messages to stdout")
+                Logger.enqueue("console output option specified, enabling log messages to stdout")
 
             # print(f'Console flag: {interactive_console}')
 
@@ -68,29 +66,28 @@ class Configuration(object):
 
             # print(f'Initialised cfg.params is: {pformat(cfg.params)}')
 
-            log = Logger({ 'console': interactive_console, 'log_level': logging.DEBUG }, buffer)
+            log = Logger({ 'console': interactive_console, 'log_level': logging.DEBUG })
 
             log_level = logging.DEBUG      # default
             if (cfg.params['log_level'] is not None):
                 log_level = cfg.params['log_level']
-                buffer.append(f'Configured log level as specified: {log_level}')
+                Logger.enqueue(f'Configured log level as specified: {log_level}')
                 setattr(cls._instance,'log_level',log_level)
                 if (log_level in LOGLEVELS):
                     log.setLevel(log_level)
 
             else:
-                buffer.append(f'Configured log level as (default) DEBUG')
+                Logger.enqueue(f'Configured log level as (default) DEBUG')
                 log.setLevel(logging.DEBUG)
 
             if (args.log_level):
                 log.setLevel(args.log_level)
 
-            buffer.append(f"Loaded configuration from {config_fn}")
-            buffer.append(f"Initial configuration is: {pformat(vars(cfg))}")
-            # buffer.append(f"Initial configuration is: {pformat(cfg.__dict__)}")
+            Logger.enqueue(f"Loaded configuration from {config_fn}")
+            Logger.enqueue(f"Initial configuration is: {pformat(vars(cfg))}")
+            # Logger.enqueue(f"Initial configuration is: {pformat(cfg.__dict__)}")
 
             log.info('------- NoiseBin -------')
-            for msg in buffer:
-                log.debug(msg)
+            Logger.flush()
 
         return cls._instance

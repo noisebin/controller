@@ -1,5 +1,10 @@
 from fabric.logging import Logger
+from fabric.data_entity import DataEntity
+import sqlite3
+
 from pprint import pprint, pformat
+
+ATTRIBUTES={'timestamp': 'TIMESTAMP', 'device_type': 'TEXT', 'name': 'TEXT', 'pin': 'TEXT', 'state': 'INTEGER'}
 
 log = Logger()
 
@@ -22,7 +27,7 @@ class Event():
                 e['pin']          # GPIO pin used
                 e['state']        # new status
             }
-
+            Some rearrangement may be necessary to achieve this.
         '''
 
         log.debug(f'Event args being marshalled: {device_name}: {pformat(e)}')
@@ -32,3 +37,17 @@ class Event():
             if (k == 'sampled_at'): k = 'timestamp'
             if (k == 'value'): k = 'state'
             setattr(self,k,v)
+
+    def store(self):
+        log.debug(f'Storing switch event: {pformat(vars(self))}')
+
+        try:
+            event_stream = DataEntity(
+                name='event',
+                attributes=ATTRIBUTES
+                )
+        except sqlite3.Warning as msg:
+            log.warn(f'Error creating event stream. {msg}')
+            return  # we should complain, one feels TODO
+
+        event_stream.store(vars(self))

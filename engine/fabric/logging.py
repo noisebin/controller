@@ -1,4 +1,4 @@
-import os
+# import os
 import sys
 import logging
 from fabric.log_stream import LogStream
@@ -9,14 +9,16 @@ from pprint import pformat
 
 class Logger(object):
     _instance = None
+    _queue = []
 
-    def __new__(cls,settings={ 'console': False, 'log_level': logging.DEBUG }, buffer=[]):
+    def __new__(cls,settings={ 'console': False, 'log_level': logging.DEBUG }):
         if cls._instance is None:
             cls._instance = log = logging.getLogger()
 
             # Buffer log messages - until we have this wired up correctly
             # print(f'Logging settings: {pformat(settings)}')
-            # buffer.append(f'Logging settings: {pformat(settings)}')
+            cls.enqueue(f'Logging settings: {pformat(settings)}')
+            cls.enqueue(f'... and a merry christmas to all')
 
             if (('log_level' in settings) and (settings['log_level'] is not None)):
                 log_level = settings['log_level']
@@ -37,7 +39,7 @@ class Logger(object):
             formatter = logging.Formatter("%(asctime)s %(levelname)s %(module)s.%(funcName)s %(message)s",
                                       "%Y-%m-%d %H:%M:%S")
 
-            sql_handler = LogStream(database = log_database, table = log_table, attributes_list = attributes_list)
+            sql_handler = LogStream(database=log_database, table=log_table, attributes=attributes_list)
             sql_handler.setLevel(log_level)
             sql_handler.setFormatter(formatter)
 
@@ -67,6 +69,30 @@ class Logger(object):
 
             # it'd be nice to override the formatter to omit %(module)s.%(funcName)s and make this more prominent in the log TODO
 
-            buffer.append(f'Created Logger singleton ID {id(log)}')
+            cls.enqueue(f'Created Logger singleton ID {id(log)}')
 
         return cls._instance
+
+
+    @classmethod
+    def enqueue(cls, message):
+        # Defer messages in situations where we are not ready to log them
+
+        cls._queue.append(message)
+
+
+    @classmethod
+    def flush(cls):
+        # Deliver defered messages to the log(s)
+
+        # This design has a small potential risk of destroying /
+        # mis-ordering messages in a multi-threaded process
+        # because .enqueue could be cutting across this?
+        # If we encounter a problem, try replacing _queue with a collections.dequeue
+        # which is suposedly more efficient and fit-for-purpose
+
+        # print(f'Hit Logger.flush, queue looks like: {pformat(cls._queue)}')
+
+        for msg in cls._queue:
+            cls._instance.debug(f'< {msg}')
+        _queue = []

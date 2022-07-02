@@ -13,13 +13,6 @@ from copy import deepcopy
 from fabric.logging import Logger
 from fabric.configuration import Configuration
 from fabric.event import Event
-from fabric.data_entity import DataEntity
-import sqlite3
-
-ATTRIBUTES={'timestamp': 'TIMESTAMP', 'device_type': 'TEXT', 'name': 'TEXT', 'pin': 'TEXT', 'state': 'INTEGER'}
-
-# Specify preferred pin library sub-resource for gpiozero via environment:
-# export GPIOZERO_PIN_FACTORY=lgpio # before program start
 from gpiozero import Device, LineSensor, DistanceSensor
 
 from pprint import pprint, pformat
@@ -27,11 +20,7 @@ from inspect import getmembers
 
 cfg = Configuration()
 
-log = Logger()  # or Logger(cfg.params) if they weren't already injected during main.assemble()
-# log.info(f'Logging is on, console output is: {cfg.params["console"]}')
-# print(f'Configuration is: {pformat(cfg.args)}')
-
-# Pin factory initialiser singleton should go here
+log = Logger()
 
 
 class Ultrasonic():
@@ -80,17 +69,9 @@ class Ultrasonic():
        log.debug(f'Event ON  for {pformat(node)}')
 
        e = Event(self.name, node)
+       # log.debug(f'switch event is: {pformat(getmembers(e))}')
 
-       try:  # this block belongs in event.py ? TODO
-           event_stream = DataEntity(
-               name='event',
-               attributes=ATTRIBUTES
-               )
-       except sqlite3.Warning as msg:
-           log.warn(f'Error creating event stream. {msg}')
-           return  # we should complain, one feels TODO
-
-       event_stream.store(vars(e))
+       e.store()
 
    def sense_off(self):
        node = self.system_node  # this device, in the System context
@@ -102,17 +83,9 @@ class Ultrasonic():
        log.debug(f'Event OFF for {pformat(node)}')
 
        e = Event(self.name, node)
+       # log.debug(f'switch event is: {pformat(getmembers(e))}')
 
-       try:
-           event_stream = DataEntity(
-               name='event',
-               attributes=ATTRIBUTES
-               )
-       except sqlite3.Warning as msg:
-           log.warn(f'Error creating event stream. {msg}')
-           return  # we should complain, one feels
-
-       event_stream.store(vars(e))
+       e.store()
 
    # ------------- Not In Use ---------------
    # Switch uses predefined values
@@ -124,12 +97,11 @@ class Ultrasonic():
        log.info(f'Sample of {node.name} is: {v} metres')
 
        return v
+   # ----------------------------------------
 
    def measure(self):
        global cfg, log
        node = self.system_node  # this device, in the System context
 
-       # log.debug(f'Measuring for {node.name} (Distance)')
        v = node.driver.distance    # gpiozero method, immediate data
-       log.info(f'Observed {node.name} distance is: {v}')
-
+       log.info(f'Measured {node.name} distance is: {v}')

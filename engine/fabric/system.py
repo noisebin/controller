@@ -53,9 +53,9 @@ class System(object):
                 node['device'] = s
                 node['pin'] = d['gpio']
                 node['status'] = 'built'
-                node['value'] = s.sample()
-                node['sample_fn'] = s.sample
-                node['measure_fn'] = s.measure
+                node['value'] = s.sample()           # set an initial value
+                node['sample_fn'] = s.sample         # function to call for future samples
+                node['measure_fn'] = s.measure       # function to call for future measurements
                 node['sampled_at'] = datetime.now()
 
                 log.debug(f'Switch device: {d["name"]} ID {id(s)} constructed as {pformat(node)}')
@@ -99,12 +99,12 @@ class System(object):
 
     def plan():
         cfg = Configuration()
-        log = Logger(cfg.params)
+        log = Logger()
 
         pass
 
     def actions():
         cfg = Configuration()
-        log = Logger(cfg.params)
+        log = Logger()
 
         pass
