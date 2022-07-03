@@ -64,7 +64,8 @@ class Configuration(object):
                 print(f"Error reading the file {0}: {1}",config_fn, err)
                 exit
 
-            # print(f'Initialised cfg.params is: {pformat(cfg.params)}')
+            # Logger.enqueue(f'Initialised cfg.params is: {pformat(cfg.params)}')
+            # Logger.enqueue(f' Args prior to Logger: \'console\': {interactive_console}, \'log_level\': {logging.DEBUG}')
 
             log = Logger({ 'console': interactive_console, 'log_level': logging.DEBUG })
 

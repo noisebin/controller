@@ -43,7 +43,7 @@ class Event():
 
         try:
             event_stream = DataEntity(
-                name='event',
+                table='event',
                 attributes=ATTRIBUTES
                 )
         except sqlite3.Warning as msg:

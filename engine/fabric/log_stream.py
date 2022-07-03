@@ -64,7 +64,7 @@ class LogStream(logging.Handler):
         insert_sql = f'INSERT INTO log (timestamp, levelname, message) \
             VALUES ("{record.asctime}", "{record.levelname}", "{record.message}");'
 
-        # print(insert_sql)
+        # print(f'LogStream.emit: {insert_sql}')
 
         conn = sqlite3.connect(self.database)
         conn.execute(insert_sql)
