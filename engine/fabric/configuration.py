@@ -62,12 +62,7 @@ class Configuration(object):
             except IOError as err:
                 sys.exit(f"Error reading the file {0}: {1}",config_fn, err)
 
-<<<<<<< HEAD
-            # Logger.enqueue(f'Initialised cfg.params is: {pformat(cfg.params)}')
-            # Logger.enqueue(f' Args prior to Logger: \'console\': {interactive_console}, \'log_level\': {logging.DEBUG}')
-=======
             Logger.enqueue(f'Initialised cfg.params before Logger() is: {pformat(cfg.params)}')
->>>>>>> 82684a6 (Bug fix via refactoring Logger().__new__ to utilise **kwargs - and reduce dependence on passed args)
 
             log = Logger(settings=cfg.params)
             # log = Logger({ 'console': interactive_console, 'logfile': cfg.params['logfile'], 'log_level': logging.DEBUG })

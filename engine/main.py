@@ -11,10 +11,6 @@ noisebin = None
 def assemble():
     cfg = Configuration()
     log = Logger()
-<<<<<<< HEAD
-    # log = Logger(cfg.params)
-=======
->>>>>>> 82684a6 (Bug fix via refactoring Logger().__new__ to utilise **kwargs - and reduce dependence on passed args)
     # print(f'cfg contains: {pformat(getmembers(cfg))}')
 
     if (cfg.args['version']):
@@ -38,10 +34,6 @@ def assemble():
 def run():
     cfg = Configuration()
     log = Logger()
-<<<<<<< HEAD
-    # log = Logger(cfg.params)
-=======
->>>>>>> 82684a6 (Bug fix via refactoring Logger().__new__ to utilise **kwargs - and reduce dependence on passed args)
 
     global noisebin  # yeah, that one.
 
