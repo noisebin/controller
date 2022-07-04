@@ -11,21 +11,22 @@ from dotmap import DotMap
 from inspect import ismethod, getmembers
 from pprint import pprint, pformat
 
-cfg = Configuration()
-log = Logger()  # or Logger(cfg.params) if they weren't already injected during main.assemble()
-
-
 class System(object):
     _instance = None
+    cfg = None
+    log = None
 
     def __new__(cls):
         # Initialise the System singleton object
         if cls._instance is None:
-            cls._instance = super(System, cls).__new__(cls)
+            cls._instance = self = super(System, cls).__new__(cls)
 
-            log.debug(f'Created System singleton ID {id(log)}')
+            self.cfg = Configuration()
+            self.log = Logger()
 
-            setattr(cls._instance,'name',cfg.name)
+            self.log.debug(f'Created System singleton ID {id(self.log)}')
+
+            setattr(cls._instance,'name',self.cfg.name)
             setattr(cls._instance,'input',DotMap({}))
             setattr(cls._instance,'control',DotMap({}))
             setattr(cls._instance,'action',DotMap({}))
@@ -34,19 +35,19 @@ class System(object):
 
     def signal_handler(self, signal, frame):
         sys.stderr.write('\nSignal caught.  Hold on ...')
-        log.debug('Exiting on receipt of signal') # might need a try block TODO
+        self.log.debug('Exiting on receipt of signal') # might need a try block TODO
         sleep(0.3)
         sys.exit(0)         # th-th-th-that's all, folks
 
     def build(self):
-        log.info(f'Configuring {len(cfg.devices)} devices:')
-        for d in cfg.devices:
+        self.log.info(f'Configuring {len(self.cfg.devices)} devices:')
+        for d in self.cfg.devices:
             if (d['device_type'] == 'switch'):
                 n = d['name']
                 self.input[n] = DotMap({})
                 node = self.input[n]
                 s = Switch(d,node) # and embed device in System object
-                # log.debug(f'Switch device: {n} ID {id(s)} constructed as {pformat(getmembers(s))}')
+                # self.log.debug(f'Switch device: {n} ID {id(s)} constructed as {pformat(getmembers(s))}')
 
                 node['name'] = n
                 node['device_type'] = d['device_type']
@@ -58,14 +59,14 @@ class System(object):
                 node['measure_fn'] = s.measure       # function to call for future measurements
                 node['sampled_at'] = datetime.now()
 
-                log.debug(f'Switch device: {d["name"]} ID {id(s)} constructed as {pformat(node)}')
+                self.log.debug(f'Switch device: {d["name"]} ID {id(s)} constructed as {pformat(node)}')
 
             elif d['device_type'] == 'ultrasonic':
                 n = d['name']
                 self.input[n] = DotMap({})
                 node = self.input[n]
                 s = Ultrasonic(d,node) # and embed device in System object
-                # log.debug(f'Switch device: {n} ID {id(s)} constructed as {pformat(getmembers(s))}')
+                # self.log.debug(f'Switch device: {n} ID {id(s)} constructed as {pformat(getmembers(s))}')
 
                 node['name'] = n
                 node['device_type'] = d['device_type']
@@ -78,33 +79,25 @@ class System(object):
                 node['measure_fn'] = s.measure
                 node['sampled_at'] = datetime.now()
 
-                log.debug(f'Ultrasonic device: {d["name"]} ID {id(s)} constructed as {pformat(node)}')
+                self.log.debug(f'Ultrasonic device: {d["name"]} ID {id(s)} constructed as {pformat(node)}')
 
     def measure_all(self):
-        global cfg, log
-
-        # log.debug(f'Measuring all from: {pformat(self.input)}')
+        # self.log.debug(f'Measuring all from: {pformat(self.input)}')
         for nom, inp in self.input.items(): #         for k, v in e.items():
             # d = self.input[nom]
-            # log.debug(f'\nInput being measured is {nom}: {pformat(d)}')
+            # self.log.debug(f'\nInput being measured is {nom}: {pformat(d)}')
 
             d = self.input[nom].device  # device object
-            log.debug(f'Input device {nom} is a sampler and a: {pformat(d)}')
+            self.log.debug(f'Input device {nom} is a sampler and a: {pformat(d)}')
             if ((d.measure is not None) and ismethod(d.measure)):
                 d.measure()
-                # log.debug(f'Performed {nom}.measure')
+                # self.log.debug(f'Performed {nom}.measure')
             else:
-                log.debug(f'No measure() for {nom}')
+                self.log.debug(f'No measure() for {nom}')
             pass
 
     def plan():
-        cfg = Configuration()
-        log = Logger()
-
         pass
 
     def actions():
-        cfg = Configuration()
-        log = Logger()
-
         pass

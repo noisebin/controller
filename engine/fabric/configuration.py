@@ -19,7 +19,6 @@ class Configuration(object):
 
             # Buffer log messages - we don't have a logger yet.
             Logger.enqueue(f'Created Configuration singleton ID {id(cfg)}')
-
             Logger.enqueue(f'Command line args: {pformat(sys.argv)}')
 
             parser = argparse.ArgumentParser()
@@ -34,14 +33,8 @@ class Configuration(object):
             args = parser.parse_args()
             setattr(cls._instance,'args',vars(args))
 
-            interactive_console = False
-
             if (args.output):
-                setattr(cls._instance,'params',{'console' : True})
-                interactive_console = True
                 Logger.enqueue("console output option specified, enabling log messages to stdout")
-
-            # print(f'Console flag: {interactive_console}')
 
             config_fn="config.json"    # default
             if (args.config):          # unless a different file has been specified
@@ -62,31 +55,28 @@ class Configuration(object):
             except IOError as err:
                 sys.exit(f"Error reading the file {0}: {1}",config_fn, err)
 
-            Logger.enqueue(f'Initialised cfg.params before Logger() is: {pformat(cfg.params)}')
+            cfg.params['console'] = bool(args.output)  # Overrides config file setting
+            # print(f'cfg.params @configuration:66: {pformat(cfg.params)}')
+            Logger.enqueue(f'Initialised cfg.params supplied to Logger() is: {pformat(cfg.params)}')
+            # print(f'Initialised cfg.params before Logger() is: {pformat(cfg.params)}')
 
             log = Logger(settings=cfg.params)
-            # log = Logger({ 'console': interactive_console, 'logfile': cfg.params['logfile'], 'log_level': logging.DEBUG })
 
-            log_level = logging.DEBUG      # default
-            if (cfg.params['log_level'] is not None):
-                log_level = cfg.params['log_level']
-                Logger.enqueue(f'Configured log level as specified: {log_level}')
-                setattr(cls._instance,'log_level',log_level)
-                if (log_level in LOGLEVELS):
-                    log.setLevel(log_level)
-
+            if (args.log_level):  # Overrides config file setting
+                log_level = args.log_level
             else:
-                Logger.enqueue(f'Configured log level as (default) DEBUG')
-                log.setLevel(logging.DEBUG)
+                log_level = logging.DEBUG      # default
+                if ((cfg.params['log_level'] is not None) and (cfg.params['log_level'] in LOGLEVELS)):
+                    log_level = cfg.params['log_level']
 
-            if (args.log_level):
-                log.setLevel(args.log_level)
+            Logger.enqueue(f'Configured log level as specified: {log_level}')
+            setattr(cls._instance,'log_level',log_level)
+            log.setLevel(log_level)
 
             Logger.enqueue(f"Loaded configuration from {config_fn}")
             Logger.enqueue(f"Initial configuration is: {pformat(vars(cfg))}")
-            # Logger.enqueue(f"Initial configuration is: {pformat(cfg.__dict__)}")
 
             log.info('------- NoiseBin -------')
-            Logger.flush()
+            Logger.deliver()
 
         return cls._instance

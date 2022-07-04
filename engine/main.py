@@ -9,8 +9,11 @@ from pprint import pprint, pformat
 noisebin = None
 
 def assemble():
+    # print('One', flush=True)
     cfg = Configuration()
-    log = Logger()
+    # print('Two', flush=True)
+    log = Logger(settings={'breakfast': 'eggs'})
+    # print('Three', flush=True)
     # print(f'cfg contains: {pformat(getmembers(cfg))}')
 
     if (cfg.args['version']):
@@ -63,6 +66,7 @@ def run():
 
 if __name__ == "__main__":
 
+    # print('Zero', flush=True)
     assemble()
 
     run()

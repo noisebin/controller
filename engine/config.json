@@ -4,7 +4,7 @@
   "name": "noisebin",
   "params":
     {
-        "console":     true,
+        "console":     false,
         "database":    "noisebin.db",
         "event_table": "event",
         "event_attributes": ["timestamp", "device", "name", "pin", "state"],

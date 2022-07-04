@@ -3,6 +3,9 @@ import sys
 import logging
 from fabric.log_stream import LogStream
 from pprint import pformat
+from inspect import currentframe, stack
+from os.path import basename
+import re
 
 # from fabric.configuration import Configuration
 # cfg = Configuration()
@@ -13,18 +16,33 @@ class Logger(object):
     settings = {}
 
     def __new__(cls, *args, **kwargs):
-    # def __new__(cls, settings={ 'console': False, 'log_level': logging.DEBUG }):
         if cls._instance is None:
             cls._instance = log = logging.getLogger()
+
+            cls.enqueue(f'Logger kwargs: {pformat(kwargs)}')
+
+            current_frame = currentframe()
+            caller_frame = current_frame.f_back
+            call_stack = stack()
+            class_string = str(stack()[1][0].f_locals['cls'])[1:-1]
+            caller_line = call_stack[1][0].f_lineno
+            s = re.split("\s+", str(caller_frame))
+            cls.enqueue(f'Logger caller: {class_string} from {basename(s[4][1:-2])}:{caller_line}')
+
             if ((kwargs) and (kwargs['settings'])):
                 # the initial instantiation call carries a hand-carved dict of
                 # parameters, as soon as they can be determined from args
                 # and the config file.  Subsequent calls bypass everything
                 # and return the previously built instance of the object
                 settings = cls.settings = kwargs['settings']
+                cls.enqueue(f'Logger assigned settings: {settings}')
             else:
-                sys.exit(f'Logger given no configuration settings.  Urk.')
+                sys.stderr.write('Unexpected error, exiting.  Log:\n')
+                for msg in cls._queue:
+                    sys.stderr.write(f'  < {msg}\n')
+                sys.exit(f'Logger given no configuration settings.  Aark.')
 
+            # exit()
             # Buffer log messages - until we have this wired up correctly.
             # A real instance would have dangerous side effects like recursion,
             # so we employ class methods + vars to pool messages before the
@@ -93,7 +111,7 @@ class Logger(object):
 
 
     @classmethod
-    def flush(cls):
+    def deliver(cls):
         # Deliver defered messages to the log(s)
 
         # This design has a small potential risk of destroying /
@@ -101,8 +119,6 @@ class Logger(object):
         # because .enqueue could be cutting across this?
         # If we encounter a problem, try replacing _queue with a collections.dequeue
         # which is suposedly more efficient and fit-for-purpose
-
-        # print(f'Hit Logger.flush, queue looks like: {pformat(cls._queue)}')
 
         for msg in cls._queue:
             cls._instance.debug(f'< {msg}')
