@@ -10,15 +10,26 @@ from pprint import pformat
 class Logger(object):
     _instance = None
     _queue = []
+    settings = {}
 
-    def __new__(cls,settings={ 'console': False, 'log_level': logging.DEBUG }):
+    def __new__(cls, *args, **kwargs):
+    # def __new__(cls, settings={ 'console': False, 'log_level': logging.DEBUG }):
         if cls._instance is None:
             cls._instance = log = logging.getLogger()
+            if ((kwargs) and (kwargs['settings'])):
+                # the initial instantiation call carries a hand-carved dict of
+                # parameters, as soon as they can be determined from args
+                # and the config file.  Subsequent calls bypass everything
+                # and return the previously built instance of the object
+                settings = cls.settings = kwargs['settings']
+            else:
+                sys.exit(f'Logger given no configuration settings.  Urk.')
 
-            # Buffer log messages - until we have this wired up correctly
-            # print(f'Logging settings: {pformat(settings)}')
+            # Buffer log messages - until we have this wired up correctly.
+            # A real instance would have dangerous side effects like recursion,
+            # so we employ class methods + vars to pool messages before the
+            # eventual singleton dispatches them.
             cls.enqueue(f'Logging settings: {pformat(settings)}')
-            cls.enqueue(f'... and a merry christmas to all')
 
             if (('log_level' in settings) and (settings['log_level'] is not None)):
                 log_level = settings['log_level']

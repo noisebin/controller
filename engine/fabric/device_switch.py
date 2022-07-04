@@ -82,7 +82,7 @@ class Switch():
 
         log.info(f'Observed event {self.name} ON')
 
-        e = Event(self.name, node)
+        e = Event(node)
         # log.debug(f'switch event is: {pformat(getmembers(e))}')
 
         e.store()
@@ -96,7 +96,7 @@ class Switch():
 
         log.info(f'Observed event {self.name} OFF')
 
-        e = Event(self.name, node)
+        e = Event(node)
         # log.debug(f'switch event is: {pformat(getmembers(e))}')
 
         e.store()

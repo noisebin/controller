@@ -68,7 +68,7 @@ class Ultrasonic():
 
        log.debug(f'Event ON  for {pformat(node)}')
 
-       e = Event(self.name, node)
+       e = Event(node)
        # log.debug(f'switch event is: {pformat(getmembers(e))}')
 
        e.store()
@@ -82,7 +82,7 @@ class Ultrasonic():
 
        log.debug(f'Event OFF for {pformat(node)}')
 
-       e = Event(self.name, node)
+       e = Event(node)
        # log.debug(f'switch event is: {pformat(getmembers(e))}')
 
        e.store()

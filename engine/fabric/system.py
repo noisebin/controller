@@ -33,7 +33,7 @@ class System(object):
         return cls._instance
 
     def signal_handler(self, signal, frame):
-        print('\nSignal caught.  Hold on ...')
+        sys.stderr.write('\nSignal caught.  Hold on ...')
         log.debug('Exiting on receipt of signal') # might need a try block TODO
         sleep(0.3)
         sys.exit(0)         # th-th-th-that's all, folks
