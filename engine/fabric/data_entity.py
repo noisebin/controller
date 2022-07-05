@@ -38,42 +38,42 @@ class DataEntity():
 
         if (self.table is None):
             raise sqlite3.Warning(f'No data entity specified.  I\'m confused.')
+            # doesn't continue
+
+        if (self.table_exists):
+            # table exists - store the attributes for reference (may not be as specified at entry)
+            self.attributes = dict(result)
+            self.table_exists = True
+            cursor.close();
         else:
-            if (not self.table_exists):
-                # we don't remember this table existing, but let's check the database
-                probe_sql = f'SELECT name, type FROM PRAGMA_TABLE_INFO("{self.table}");'
-                conn = sqlite3.connect(self.database)
-                cursor = conn.execute(probe_sql)
-                result = cursor.fetchall()
+            # we don't remember this table existing, but let's check the database
+            probe_sql = f'SELECT name, type FROM PRAGMA_TABLE_INFO("{self.table}");'
+            conn = sqlite3.connect(self.database)
+            cursor = conn.execute(probe_sql)
+            result = cursor.fetchall()
 
-                # log.debug(f'Schema query result: {pformat(result)}')
-                if (result == []):
-                    # No table, but can we make one?
-                    # log.debug(f'{self.table} table not found in {self.database}')
+            # log.debug(f'Schema query result: {pformat(result)}')
+            if (result == []):
+                # No table, but can we make one?
+                # log.debug(f'{self.table} table not found in {self.database}')
 
-                    if (len(self.attributes)):  # Yes, we can!
-                        create_table_sql = 'CREATE TABLE IF NOT EXISTS ' + self.table + ' ('
-                        for a in self.attributes.keys():
-                            # log.debug(f'Have attribute {a} of type {self.attributes[a]}')
-                            create_table_sql += f'{a} {self.attributes[a]}, '
-                        create_table_sql = create_table_sql[:-2] + ')'
-                        # log.debug(f'Creating {self.table} with: {create_table_sql}')
-                        conn.execute(create_table_sql)
-                        conn.commit()  # boo-whacka-boom-bam!
-                        conn.close()
-                        self.table_exists = True
-                    else:
-                        self.table_exists = False
-                        raise sqlite3.Warning(f'Table {self.table} does not exist and we don\'t have enough wood to make one')
-
-                else:
-                    # table exists - store the attributes for reference (may not be as specified at entry)
-                    self.attributes = dict(result)
+                if (len(self.attributes)):  # Yes, we can!
+                    create_table_sql = 'CREATE TABLE IF NOT EXISTS ' + self.table + ' ('
+                    for a in self.attributes.keys():
+                        # log.debug(f'Have attribute {a} of type {self.attributes[a]}')
+                        create_table_sql += f'{a} {self.attributes[a]}, '
+                    create_table_sql = create_table_sql[:-2] + ')'
+                    # log.debug(f'Creating {self.table} with: {create_table_sql}')
+                    conn.execute(create_table_sql)
+                    conn.commit()  # boo-whacka-boom-bam!
+                    conn.close()
                     self.table_exists = True
-                    cursor.close();
+                else:
+                    self.table_exists = False
+                    raise sqlite3.Warning(f'Table {self.table} does not exist and we don\'t have enough wood to make one')
 
-            # log.debug(f'Table {self.table} {"exists" if self.table_exists else "does not exist"}')
-            # log.debug(f'{self.table} attributes are: {pformat(self.attributes)}')
+        # log.debug(f'Table {self.table} {"exists" if self.table_exists else "does not exist"}')
+        # log.debug(f'{self.table} attributes are: {pformat(self.attributes)}')
 
     def store(self, datum):
         '''

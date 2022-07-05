@@ -57,6 +57,7 @@ class System(object):
                 node['value'] = s.sample()           # set an initial value
                 node['sample_fn'] = s.sample         # function to call for future samples
                 node['measure_fn'] = s.measure       # function to call for future measurements
+                node['metric'] = {}
                 node['sampled_at'] = datetime.now()
 
                 self.log.debug(f'Switch device: {d["name"]} ID {id(s)} constructed as {pformat(node)}')
@@ -74,9 +75,17 @@ class System(object):
                 node['pin'] = node['trigger_gpio'] = d['trigger_gpio']
                 node['echo_gpio'] = d['echo_gpio']
                 node['status'] = 'built'
-                node['value'] = s.sample()
+
+                # node['value'] = s.sample()  # an initial value, although it's never updated?
+                IN_RANGE = True ; OUT_OF_RANGE = False
+                if (s.sample() > s.threshold):
+                    node['value'] = OUT_OF_RANGE
+                else:
+                    else node['value'] = IN_RANGE
+
                 node['sample_fn'] = s.sample
                 node['measure_fn'] = s.measure
+                node['metric'] = {}
                 node['sampled_at'] = datetime.now()
 
                 self.log.debug(f'Ultrasonic device: {d["name"]} ID {id(s)} constructed as {pformat(node)}')
@@ -84,14 +93,12 @@ class System(object):
     def measure_all(self):
         # self.log.debug(f'Measuring all from: {pformat(self.input)}')
         for nom, inp in self.input.items(): #         for k, v in e.items():
-            # d = self.input[nom]
-            # self.log.debug(f'\nInput being measured is {nom}: {pformat(d)}')
 
             d = self.input[nom].device  # device object
             self.log.debug(f'Input device {nom} is a sampler and a: {pformat(d)}')
             if ((d.measure is not None) and ismethod(d.measure)):
                 d.measure()
-                # self.log.debug(f'Performed {nom}.measure')
+                # self.log.debug(f'Conducted {nom}.measure')
             else:
                 self.log.debug(f'No measure() for {nom}')
             pass

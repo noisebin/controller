@@ -8,7 +8,7 @@ device_ultrasonic.py
 
 '''
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from copy import deepcopy
 from fabric.logging import Logger
 from fabric.configuration import Configuration
@@ -17,6 +17,9 @@ from gpiozero import Device, LineSensor, DistanceSensor
 
 from pprint import pprint, pformat
 from inspect import getmembers
+
+IN_RANGE = True
+OUT_OF_RANGE = False
 
 cfg = Configuration()
 
@@ -63,10 +66,10 @@ class Ultrasonic():
        node = self.system_node  # this device, in the System context
 
        node['sampled_at'] = datetime.now()  # sampled_at not defined
-       node['value'] = True
+       node['value'] = IN_RANGE
        node['name'] = self.name
 
-       log.debug(f'Event ON  for {pformat(node)}')
+       log.debug(f'Event IN_RANGE for {pformat(node)}')
 
        e = Event(node)
        # log.debug(f'switch event is: {pformat(getmembers(e))}')
@@ -77,31 +80,54 @@ class Ultrasonic():
        node = self.system_node  # this device, in the System context
 
        node['sampled_at'] = datetime.now()  # sampled_at not defined
-       node['value'] = False
+       node['value'] = OUT_OF_RANGE
        node['name'] = self.name
 
-       log.debug(f'Event OFF for {pformat(node)}')
+       log.debug(f'Event OUT_OF_RANGE for {pformat(node)}')
 
        e = Event(node)
        # log.debug(f'switch event is: {pformat(getmembers(e))}')
 
        e.store()
 
-   # ------------- Not In Use ---------------
-   # Switch uses predefined values
-   # Ultrasonic relies on in_range / out_of_range + measure()
+   # Ultrasonic relies on IN_RANGE / OUT_OF_RANGE + measure()
    def sample(self):
        node = self.system_node  # this device, in the System context
 
-       v = node.driver.value    # gpiozero method, immediate data
+       v = node.driver.value    # gpiozero method, immediate data.
+       # Should use IN_RANGE, via
+       # driver.distance - in metres; driver.value = 0..1 proportion of max_distance (!)
+       # if distance > threshold: result is OUT_OF_RANGE
+       # else result is IN_RANGE
+
        log.info(f'Sample of {node.name} is: {v} metres')
 
        return v
    # ----------------------------------------
 
-   def measure(self):
-       global cfg, log
-       node = self.system_node  # this device, in the System context
+    def measure(self):
+        global cfg, log
+        node = self.system_node  # this device, in the System context
 
-       v = node.driver.distance    # gpiozero method, immediate data
-       log.info(f'Measured {node.name} distance is: {v}')
+        # ---- current distance to visitor, if any
+        v = node.metric['distance'] = node.driver.distance    # gpiozero method, immediate data
+        log.info(f'Measured {node.name} distance is: {v}')
+
+        try:
+            ATTRIBUTES={'timestamp': 'TIMESTAMP', 'device_type': 'TEXT', 'name': 'TEXT', 'pin': 'TEXT', 'state': 'INTEGER'}
+            event_source = DataEntity(
+                table='event',
+                attributes=ATTRIBUTES
+                )
+        except sqlite3.Warning as msg:
+            self.log.warn(f'Error creating event stream. {msg}')
+            return  # we should complain, one feels TODO
+
+        # ---- number of events in the last 60 seconds
+        interval60sec = timedelta(seconds=-60)
+        t60sec = datetime.now() + interval60sec
+
+        query = (f'SELECT * FROM event WHERE device_type = \'{self.device_type}\'
+                 AND name = \'{self.name}\' WHERE timestamp > \'{t60sec}\'')
+        self.log.debug(query)
+        # event_source.query('SELECT * FROM event WHERE device_type = \'{self.device_type}\'

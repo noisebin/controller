@@ -16,6 +16,11 @@ class Logger(object):
     settings = {}
 
     def __new__(cls, *args, **kwargs):
+        # the initial instantiation call carries a hand-carved dict of
+        # parameters, as soon as they can be determined from args
+        # and the config file.  Subsequent calls bypass everything
+        # and return the previously built instance of the object
+        
         if cls._instance is None:
             cls._instance = log = logging.getLogger()
 
@@ -30,10 +35,6 @@ class Logger(object):
             cls.enqueue(f'Logger caller: {class_string} from {basename(s[4][1:-2])}:{caller_line}')
 
             if ((kwargs) and (kwargs['settings'])):
-                # the initial instantiation call carries a hand-carved dict of
-                # parameters, as soon as they can be determined from args
-                # and the config file.  Subsequent calls bypass everything
-                # and return the previously built instance of the object
                 settings = cls.settings = kwargs['settings']
                 cls.enqueue(f'Logger assigned settings: {settings}')
             else:
