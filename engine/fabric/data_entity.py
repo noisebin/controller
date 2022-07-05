@@ -1,6 +1,6 @@
 import sqlite3
 # from fabric.configuration import Configuration
-# from fabric.logging import Logger   # Use with great caution - recursion trap !
+from fabric.logging import Logger   # Use with great caution - recursion trap !
 from pprint import pprint, pformat
 
 # log = Logger()
@@ -24,6 +24,7 @@ class DataEntity():
         Returns:
             None
         '''
+        log = Logger()
 
         if (database is not None):
             self.database = database
@@ -40,10 +41,10 @@ class DataEntity():
             raise sqlite3.Warning(f'No data entity specified.  I\'m confused.')
             # doesn't continue
 
+        log.debug(f'self.table_exists is: {self.table_exists}')
         if (self.table_exists):
             # table exists - store the attributes for reference (may not be as specified at entry)
             self.attributes = dict(result)
-            self.table_exists = True
             cursor.close();
         else:
             # we don't remember this table existing, but let's check the database
@@ -63,7 +64,7 @@ class DataEntity():
                         # log.debug(f'Have attribute {a} of type {self.attributes[a]}')
                         create_table_sql += f'{a} {self.attributes[a]}, '
                     create_table_sql = create_table_sql[:-2] + ')'
-                    # log.debug(f'Creating {self.table} with: {create_table_sql}')
+                    log.debug(f'Creating {self.table} with: {create_table_sql}')
                     conn.execute(create_table_sql)
                     conn.commit()  # boo-whacka-boom-bam!
                     conn.close()
@@ -71,9 +72,11 @@ class DataEntity():
                 else:
                     self.table_exists = False
                     raise sqlite3.Warning(f'Table {self.table} does not exist and we don\'t have enough wood to make one')
+            else: 
+                # schema for table found
+                self.table_exists = True
 
-        # log.debug(f'Table {self.table} {"exists" if self.table_exists else "does not exist"}')
-        # log.debug(f'{self.table} attributes are: {pformat(self.attributes)}')
+            # log.debug(f'{self.table} attributes are: {pformat(self.attributes)}')
 
     def store(self, datum):
         '''
@@ -114,7 +117,9 @@ class DataEntity():
         Returns:
             None
         '''
+        log = Logger()
 
+        # log.debug(f'query() vars: {pformat(vars(self))}')
         if (not self.table_exists):
             raise sqlite3.Warning(f'Table {self.table} does not exist when querying data.')
         else:

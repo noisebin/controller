@@ -60,14 +60,14 @@ class System(object):
                 node['metric'] = {}
                 node['sampled_at'] = datetime.now()
 
-                self.log.debug(f'Switch device: {d["name"]} ID {id(s)} constructed as {pformat(node)}')
+                # self.log.debug(f'Switch device: {d["name"]} ID {id(s)} constructed as {pformat(node)}')
 
             elif d['device_type'] == 'ultrasonic':
                 n = d['name']
                 self.input[n] = DotMap({})
                 node = self.input[n]
                 s = Ultrasonic(d,node) # and embed device in System object
-                # self.log.debug(f'Switch device: {n} ID {id(s)} constructed as {pformat(getmembers(s))}')
+                # self.log.debug(f'Ultrasonic device: {n} ID {id(s)} constructed as {pformat(getmembers(s))}')
 
                 node['name'] = n
                 node['device_type'] = d['device_type']
@@ -76,26 +76,27 @@ class System(object):
                 node['echo_gpio'] = d['echo_gpio']
                 node['status'] = 'built'
 
-                # node['value'] = s.sample()  # an initial value, although it's never updated?
+                # node['value'] is a little more subtle for an ultrasonic
                 IN_RANGE = True ; OUT_OF_RANGE = False
-                if (s.sample() > s.threshold):
+                threshold = s.system_node.driver.threshold_distance
+                if (s.sample() > threshold):
                     node['value'] = OUT_OF_RANGE
                 else:
-                    else node['value'] = IN_RANGE
+                    node['value'] = IN_RANGE
 
                 node['sample_fn'] = s.sample
                 node['measure_fn'] = s.measure
                 node['metric'] = {}
                 node['sampled_at'] = datetime.now()
 
-                self.log.debug(f'Ultrasonic device: {d["name"]} ID {id(s)} constructed as {pformat(node)}')
+                # self.log.debug(f'Ultrasonic device: {d["name"]} ID {id(s)} constructed as {pformat(node)}')
 
     def measure_all(self):
         # self.log.debug(f'Measuring all from: {pformat(self.input)}')
         for nom, inp in self.input.items(): #         for k, v in e.items():
 
             d = self.input[nom].device  # device object
-            self.log.debug(f'Input device {nom} is a sampler and a: {pformat(d)}')
+            # self.log.debug(f'Input device {nom} is a sampler and a: {pformat(d)}')
             if ((d.measure is not None) and ismethod(d.measure)):
                 d.measure()
                 # self.log.debug(f'Conducted {nom}.measure')

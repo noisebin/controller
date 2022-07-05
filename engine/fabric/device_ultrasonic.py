@@ -10,6 +10,7 @@ device_ultrasonic.py
 import time
 from datetime import datetime, timedelta
 from copy import deepcopy
+from fabric.data_entity import DataEntity
 from fabric.logging import Logger
 from fabric.configuration import Configuration
 from fabric.event import Event
@@ -90,44 +91,66 @@ class Ultrasonic():
 
        e.store()
 
-   # Ultrasonic relies on IN_RANGE / OUT_OF_RANGE + measure()
    def sample(self):
        node = self.system_node  # this device, in the System context
 
-       v = node.driver.value    # gpiozero method, immediate data.
-       # Should use IN_RANGE, via
-       # driver.distance - in metres; driver.value = 0..1 proportion of max_distance (!)
-       # if distance > threshold: result is OUT_OF_RANGE
-       # else result is IN_RANGE
+       # node.driver.value  - attribute we set at creation, threshold crossings
+       # driver.value is represented as:
+       #   if distance > threshold_distance: result is OUT_OF_RANGE
+       #   else result is IN_RANGE
 
-       log.info(f'Sample of {node.name} is: {v} metres')
+       v = node.driver.value
+       if (v): sample_value = 'IN_RANGE'
+       else: sample_value = 'OUT_OF_RANGE'
+
+       log.info(f'Sample of {node.name}.value is: {sample_value}')
 
        return v
-   # ----------------------------------------
 
-    def measure(self):
-        global cfg, log
-        node = self.system_node  # this device, in the System context
+   def measure(self):
+       node = self.system_node  # this device, in the System context
 
-        # ---- current distance to visitor, if any
-        v = node.metric['distance'] = node.driver.distance    # gpiozero method, immediate data
-        log.info(f'Measured {node.name} distance is: {v}')
+       # ---- current distance to visitor, if any
+       v = node.metric['distance'] = node.driver.distance    # gpiozero method, immediate data
+       log.info(f'Metric {node.name}.distance: {v}')
 
-        try:
-            ATTRIBUTES={'timestamp': 'TIMESTAMP', 'device_type': 'TEXT', 'name': 'TEXT', 'pin': 'TEXT', 'state': 'INTEGER'}
-            event_source = DataEntity(
-                table='event',
-                attributes=ATTRIBUTES
-                )
-        except sqlite3.Warning as msg:
-            self.log.warn(f'Error creating event stream. {msg}')
-            return  # we should complain, one feels TODO
+       try:
+           ATTRIBUTES={'timestamp': 'TIMESTAMP', 'device_type': 'TEXT', 'name': 'TEXT', 'pin': 'TEXT', 'state': 'INTEGER'}
+           event_source = DataEntity(
+               table='event',
+               attributes=ATTRIBUTES
+               )
+       except sqlite3.Warning as msg:
+           log.warn(f'Error creating event stream. {msg}')
+           return  # we should complain, one feels TODO
 
-        # ---- number of events in the last 60 seconds
-        interval60sec = timedelta(seconds=-60)
-        t60sec = datetime.now() + interval60sec
+       # log.debug(f'DataEntity \'event\' is: {pformat(vars(event_source))}')
 
-        query = (f'SELECT * FROM event WHERE device_type = \'{self.device_type}\'
-                 AND name = \'{self.name}\' WHERE timestamp > \'{t60sec}\'')
-        self.log.debug(query)
-        # event_source.query('SELECT * FROM event WHERE device_type = \'{self.device_type}\'
+       q={}
+       # ---- number of events in the last 5 seconds
+       q['t5sec'] = datetime.now() + timedelta(seconds=-5)
+
+       # ---- number of events in the last 60 seconds
+       q['t60sec'] = datetime.now() + timedelta(seconds=-60)
+
+       # ---- number of events in the last 86400 seconds (24 hours)
+       q['t24hours'] = datetime.now() + timedelta(days=-1)
+
+       # ---- number of events in the last 30 days
+       q['t30days'] = datetime.now() + timedelta(days=-30)
+
+       for n in q:
+           print(f'thresh {n} is {pformat(q[n])}')
+           query = (f'SELECT count(*) AS \'{n}\' FROM event WHERE device_type = \'{self.system_node.device_type}\' \
+                    AND name = \'{self.system_node.name}\' AND timestamp > \'{q[n]}\'')
+           # log.debug(query)
+           result = event_source.query(query)
+           # log.debug(f'Event query result: {pformat(result)}')
+
+           if (result):
+               count=result[0][0]
+               node.metric[n] = count
+               log.info(f'Metric {node.name}.{n}: {count}')
+           else:
+               log.debug(f'Query for metric {node.name}.{n} produced no result')
+
