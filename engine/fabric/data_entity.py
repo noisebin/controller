@@ -10,6 +10,7 @@ class DataEntity():
     '''
     Data entity (table) handler for SQLite
     '''
+    database = None
     table = None
     attributes = []
     table_exists = False
@@ -72,7 +73,7 @@ class DataEntity():
                 else:
                     self.table_exists = False
                     raise sqlite3.Warning(f'Table {self.table} does not exist and we don\'t have enough wood to make one')
-            else: 
+            else:
                 # schema for table found
                 self.table_exists = True
 

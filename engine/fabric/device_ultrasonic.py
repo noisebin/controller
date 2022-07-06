@@ -14,6 +14,7 @@ from fabric.data_entity import DataEntity
 from fabric.logging import Logger
 from fabric.configuration import Configuration
 from fabric.event import Event
+from fabric.metric import Metric
 from gpiozero import Device, LineSensor, DistanceSensor
 
 from pprint import pprint, pformat
@@ -126,31 +127,40 @@ class Ultrasonic():
 
        # log.debug(f'DataEntity \'event\' is: {pformat(vars(event_source))}')
 
-       q={}
+       interval={}
        # ---- number of events in the last 5 seconds
-       q['t5sec'] = datetime.now() + timedelta(seconds=-5)
+       interval['t5sec'] = datetime.now() + timedelta(seconds=-5)
 
        # ---- number of events in the last 60 seconds
-       q['t60sec'] = datetime.now() + timedelta(seconds=-60)
+       interval['t60sec'] = datetime.now() + timedelta(seconds=-60)
 
        # ---- number of events in the last 86400 seconds (24 hours)
-       q['t24hours'] = datetime.now() + timedelta(days=-1)
+       interval['t24hours'] = datetime.now() + timedelta(days=-1)
 
        # ---- number of events in the last 30 days
-       q['t30days'] = datetime.now() + timedelta(days=-30)
+       interval['t30days'] = datetime.now() + timedelta(days=-30)
 
-       for n in q:
-           print(f'thresh {n} is {pformat(q[n])}')
-           query = (f'SELECT count(*) AS \'{n}\' FROM event WHERE device_type = \'{self.system_node.device_type}\' \
-                    AND name = \'{self.system_node.name}\' AND timestamp > \'{q[n]}\'')
+       for t in interval:
+           print(f'threshold {t} begins {pformat(interval[t])}')
+           query = (f'SELECT count(*) AS \'{t}\' FROM event WHERE device_type = \'{self.system_node.device_type}\' \
+                    AND name = \'{self.system_node.name}\' AND timestamp > \'{interval[t]}\'')
            # log.debug(query)
            result = event_source.query(query)
            # log.debug(f'Event query result: {pformat(result)}')
 
            if (result):
                count=result[0][0]
-               node.metric[n] = count
-               log.info(f'Metric {node.name}.{n}: {count}')
+               node.metric[t] = count
+               log.info(f'Metric {node.name}.{t}: {count}')
            else:
-               log.debug(f'Query for metric {node.name}.{n} produced no result')
+               log.debug(f'Query for metric {node.name}.{t} produced no result')
 
+       node['sampled_at'] = datetime.now()
+       
+       # try:
+       metric_data = Metric(self.system_node)
+       # except sqlite3.Warning as msg:
+       #     log.warn(f'Error creating event stream. {msg}')
+       #     return  # we should complain, one feels TODO
+
+       metric_data.store()
