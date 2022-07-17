@@ -42,7 +42,7 @@ class DataEntity():
             raise sqlite3.Warning(f'No data entity specified.  I\'m confused.')
             # doesn't continue
 
-        log.debug(f'self.table_exists is: {self.table_exists}')
+        log.debug(f'{self.table}.table_exists is: {self.table_exists}')
         if (self.table_exists):
             # table exists - store the attributes for reference (may not be as specified at entry)
             self.attributes = dict(result)

@@ -15,6 +15,7 @@ from fabric.configuration import Configuration
 from fabric.event import Event
 from gpiozero import Device, LineSensor, DistanceSensor
 
+from dotmap import DotMap
 from pprint import pprint, pformat
 from inspect import getmembers
 
@@ -46,7 +47,7 @@ class Switch():
     system_node: None
     name: None
 
-    def __init__(self, device, node):
+    def __init__(self, system, device_config):
         '''
         Switch class constructor
         Parameters:
@@ -60,18 +61,46 @@ class Switch():
             itself
         '''
 
-        log.info(f'Building device {device}')
+        log.info(f'Building device {device_config}')
 
-        self.name = device['name']
-        self.system_node = node  # this device, in the System context
+        self.name = n = device_config['name']
+        # self.system_node = node  # this device, in the System context
 
-        p = device['gpio']
+        p = device_config['gpio']
         d = LineSensor(p)
+
+        node = {}
+        # node = DotMap({})
+        # self.log.debug(f'Switch device: {n} ID {id(s)} constructed as {pformat(getmembers(s))}')
+
+        node['name'] = n
+        node['device_type'] = device_config['device_type']
+        node['device'] = self
+        node['pin'] = device_config['gpio']
+        node['status'] = 'built'
+        node['value'] = False                   # self.sample() relies on self.system_node which is not yet set
+        node['sample_fn'] = self.sample         # function to call for future samples
+        node['measure_fn'] = self.measure       # function to call for future measurements
+        node['metric'] = {}
+        node['sampled_at'] = datetime.now()
+
+        # self.log.debug(f'Switch device: {d["name"]} ID {id(s)} constructed as {pformat(node)}')
+
         d.when_no_line = self.sense_on
         d.when_line = self.sense_off
         node['driver'] = d
 
-        log.debug(f'Driver {self.name} is: {node.driver}')
+        for p in node:
+            setattr(self, p, node[p])  # attach meta, driver, methods
+            setattr(system.input[n], p, node[p])  # Store also in system context
+
+        self.system_node = system.input[n]  # Remember where we will be in the whole-system context
+
+        log.debug(f'Driver {self.name} is: {node["driver"]}')
+        # return node
+
+    def wire_up(self):
+        pass
 
     def sense_on(self):
         node = self.system_node  # this device, in the System context
@@ -105,7 +134,7 @@ class Switch():
         node = self.system_node  # this device, in the System context
 
         v = node.driver.value    # gpiozero method, immediate data
-        log.info(f'Sample of {node.name} is: {v}')
+        log.info(f'Sample of {node["name"]} is: {v}')
 
         return v
 
@@ -114,7 +143,7 @@ class Switch():
         node = self.system_node  # this device, in the System context
         ATTRIBUTES_LIST = ['timestamp', 'device_type', 'name', 'metric', 'value']
 
-        log.debug(f'Measures for {node.name} (None)')
+        log.debug(f'Measures for {node["name"]} (None)')
 
 class DeviceFail(Exception):
     '''Handle device failures, general case (can be extended)'''

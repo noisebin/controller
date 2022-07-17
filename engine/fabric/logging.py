@@ -2,6 +2,7 @@
 import sys
 import logging
 from fabric.log_stream import LogStream
+import json
 from pprint import pformat
 from inspect import currentframe, stack
 from os.path import basename
@@ -20,7 +21,7 @@ class Logger(object):
         # parameters, as soon as they can be determined from args
         # and the config file.  Subsequent calls bypass everything
         # and return the previously built instance of the object
-        
+
         if cls._instance is None:
             cls._instance = log = logging.getLogger()
 
@@ -124,3 +125,15 @@ class Logger(object):
         for msg in cls._queue:
             cls._instance.debug(f'< {msg}')
         _queue = []
+
+    @staticmethod
+    def dump(object):
+        dumpfile = 'noisebin.dump'
+
+        try:
+            with open(dumpfile, "w") as fhandle:
+                fhandle.write(pformat(object))
+                # props = json.dump(object, fhandle)  # json refuses to unpack objects.  poo.
+
+        except IOError as err:
+            sys.exit(f"Error creating the dump file {0}: {1}",dumpfile, err)

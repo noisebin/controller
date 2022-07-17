@@ -9,11 +9,8 @@ from pprint import pprint, pformat
 noisebin = None
 
 def assemble():
-    # print('One', flush=True)
     cfg = Configuration()
-    # print('Two', flush=True)
     log = Logger(settings={'breakfast': 'eggs'})
-    # print('Three', flush=True)
     # print(f'cfg contains: {pformat(getmembers(cfg))}')
 
     if (cfg.args['version']):
@@ -29,6 +26,7 @@ def assemble():
     noisebin = System() # minimal constructor
     noisebin.build()    # the real work of assembling a system object
                         # Delegates device creation to per-device classes
+    noisebin.connect()  # Find a network, Open command socket + queue
 
     # print(f'cfg contains: {pformat(getmembers(cfg))}')
 
